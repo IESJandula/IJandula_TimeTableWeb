@@ -309,6 +309,34 @@ export const cargarCsvAlumnos = async (file) =>{
     }
 }
 /**
+ * Metodo que envia el fichero csv para cargar los planos del centro
+ * @param {FormData} file 
+ * @returns true si el fichero ha sido cargado correctamente, false si no
+ */
+export const cargarCsvPlanos = async(file)=>{
+    try
+    {
+        let url = "http://localhost:8088/horarios/send/csv-planos";
+
+        const response = await fetch(url,{
+            method:"POST",
+            body:file
+        });
+
+        if(!response.ok)
+        {
+            throw new Error("El fichero csv es incorrecto");
+        }
+
+        return await true;
+    }
+    catch(error)
+    {
+        console.log(error);
+        return await false;
+    }
+}
+/**
  * Metodo que pasandole un nombre y apellido realiza una peticion http
  * al servidor devolviendo el horario de un profesor en formato pdf
  * @param {string} nombre 
