@@ -45,6 +45,7 @@ const onClickPrimeraPlanta = () =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
+    obtenerAulas("PLANTA BAJA");
     imagenPlantaBaja.style.display = "block";
     imagenPlanta1.style.display = "none";
     imagenPlanta2.style.display = "none";
@@ -58,6 +59,7 @@ const onClickSegundaPlanta = () =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
+    obtenerAulas("PRIMERA PLANTA");
     imagenPlantaBaja.style.display = "none";
     imagenPlanta1.style.display = "block";
     imagenPlanta2.style.display = "none";
@@ -71,6 +73,7 @@ const onClickTerceraPlanta = () =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
+    obtenerAulas("SEGUNDA PLANTA");
     imagenPlantaBaja.style.display = "none";
     imagenPlanta1.style.display = "none";
     imagenPlanta2.style.display = "block";
