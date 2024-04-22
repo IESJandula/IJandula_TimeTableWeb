@@ -325,12 +325,12 @@ onMounted(async ()=>{
     getHour();
     getTramo();
     let error = await checkData();
-    if(typeof error != "undefined" && error.headerInfo!="Servidor no lanzado")
+    if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
     {
-        let valor = await sendErrorInfo(error);
+        sendErrorInfo(error);
         router.push("/error");
     }
-    else
+    else if(error.headerInfo=="Servidor no lanzado")
     {
         router.push("/error");
     }

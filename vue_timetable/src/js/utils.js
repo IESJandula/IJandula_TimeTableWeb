@@ -275,6 +275,6 @@ export const checkData = async()=>{
     }
     else
     {
-        return undefined;
+        return "ok";
     }
 }

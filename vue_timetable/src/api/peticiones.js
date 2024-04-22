@@ -659,11 +659,15 @@ export const sendErrorInfo = async(objectError)=>{
  * @returns error en formato json
  */
 export const getInfoError = async()=>{
+    let response = undefined;
+    let isDone = false;
     try
     {
         let url = "http://localhost:8088/horarios/get/error-info";
 
-        const response = await fetch(url);
+        response = await fetch(url);
+
+        isDone = true;
 
         if(!response.ok)
         {
@@ -675,6 +679,30 @@ export const getInfoError = async()=>{
     catch(error)
     {
         console.log(error);
-        return undefined;
+        //En caso de que la respuesta sea ok y no pueda darle formato al json significa
+        //que el servidor se acaba de arrancar y forzamos a devolver el error de que no
+        //se han cargado datos en general
+        if(isDone)
+        {
+            if(response.ok)
+            {
+                let infoError = {
+                    headerInfo:"Datos no cargados",
+                    infoError:"El administrador aun no ha cargado los datos en el servidor cuando los cargue se le redigira al apartado de planos gracias por la espera",
+                    wait:true
+                };
+                sendErrorInfo(infoError);
+                return infoError = {
+                    headerInfo:"Datos no cargados",
+                    infoError:"El administrador aun no ha cargado los datos en el servidor cuando los cargue se le redigira al apartado de planos gracias por la espera",
+                    wait:true
+                };
+            }
+        }
+        else
+        {
+            return undefined;
+        }
+        
     }
 }
