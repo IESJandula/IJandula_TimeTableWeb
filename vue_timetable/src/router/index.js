@@ -6,6 +6,7 @@ import HorarioView from '@/views/HorarioView.vue';
 import AlumnosView from '@/views/AlumnosView.vue'
 import AdminView from '@/views/AdminView.vue';
 import MapaView from '@/views/MapaView.vue';
+import NotFoundView from '@/views/NotFoundView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +45,11 @@ const router = createRouter({
       path: '/horarios/mapa',
       name: 'mapa',
       component: MapaView
+    },
+    {
+      path: '/error',
+      name: 'notFoundPage',
+      component: NotFoundView
     }
   ]
 })
