@@ -1,6 +1,7 @@
 import { Profesor } from "@/models/profesores";
 import { Tramo } from "@/models/tramos";
 import { Alumno } from "@/models/alumnos";
+import { checkServerData } from "@/api/peticiones";
 
 /**
  * Metodo que compara el nombre seleccionado con los datos cargadados
@@ -228,4 +229,52 @@ export const compareDate = (fechaInicio,fechaFin) =>{
     }
 
     return compare;
+}
+
+/**
+ * Metodo que se ejecuta al cargar la pagina y comprueba si en el servidor
+ * existen datos, en caso contrario redirige al usuario a la pagina de error
+ */
+export const checkData = async()=>{
+    const data = await checkServerData();
+
+    if(typeof data == "undefined")
+    {
+        return {
+            headerInfo:"Servidor no lanzado",
+            infoError:"El servidor principal no ha sido lanzado, cuando se lance sera redirigido al inicio de sesion, gracias por la espera",
+            wait:true
+        };
+    }
+    else if(typeof data != "string")
+    {
+        if(data.error == "Error de datos en general")
+        {
+            return {
+                headerInfo:"Datos no cargados",
+                infoError:"El administrador aun no ha cargado los datos en el servidor cuando los cargue se le redigira al apartado de planos gracias por la espera",
+                wait:true
+            };
+        }
+        else if(data.error == "Error de datos de estudiantes")
+        {
+            return {
+                headerInfo:"Datos de estudiantes no cargados",
+                infoError:"El administrador aun no ha cargado los datos de los estudiantes en el servidor cuando los cargue se cargara automaticamente la pagina gracias por la espera",
+                wait:true
+            };
+        }
+        else if(data.error == "Error de datos de planos")
+        {
+            return {
+                headerInfo:"Datos de estudiantes no cargados",
+                infoError:"El administrador aun no ha cargado los datos de los planos en el servidor cuando los cargue se cargara automaticamente la pagina gracias por la espera",
+                wait:true
+            };
+        }
+    }
+    else
+    {
+        return undefined;
+    }
 }

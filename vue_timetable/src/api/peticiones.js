@@ -584,3 +584,97 @@ export const obtenerAulasPorPlanta = async(planta) =>{
         console.log(error)
     }
 }
+
+/**
+ * Metodo que realiza una peticion http al servidor para comprobar el estado actual
+ * de los datos, puede devolver 5 respuestas
+ * <ol>
+ *  <li>Error de datos en general (datos no cargados)</li>
+ *  <li>Estudiantes no cargados</li>
+ *  <li>Planos no cargados</li>
+ *  <li>Servidor no lanzado</li>
+ *  <li>Datos cargados</li>
+ * </ol>
+ * @returns respuesta cionstante que servira para llamar a otra peticion
+ */
+export const checkServerData = async()=>{
+    try
+    {
+        let url = "http://localhost:8088/horarios/check-data";
+
+        const response = await fetch(url);
+
+        if(response.ok)
+        {
+            return "ok";
+        }
+        else if(response.status==400)
+        {
+            return await response.json();
+        }
+        else
+        {
+            throw new Error("El servidor no esta lanzado");
+        }
+    }
+    catch(error)
+    {
+        console.log(error);
+        return undefined;
+    }
+}
+/**
+ * Metodo que manda la informacion del error al servidor para obtenerla mas adelante
+ * en la pagina de error
+ * @returns true o false dependiendo del estado de la respuesta
+ */
+export const sendErrorInfo = async(objectError)=>{
+    try
+    {
+        let url = "http://localhost:8088/horarios/send/error-info";
+
+        const response = await fetch(url,{
+            method:"POST",
+            headers: {
+                'Content-Type': 'application/json',
+              },
+            body: JSON.stringify(objectError)
+        });
+       
+        if(!response.ok)
+        {
+            throw new Error("Error al mandar la informacion del error")
+        }
+        return await true;
+    }
+    catch(error)
+    {
+        console.log(error);
+        return await false;
+    }
+}
+/**
+ * Metodo que llama al servidor y obtiene la informacion del error en json
+ * para colocar sus datos en la pagina de error 
+ * @returns error en formato json
+ */
+export const getInfoError = async()=>{
+    try
+    {
+        let url = "http://localhost:8088/horarios/get/error-info";
+
+        const response = await fetch(url);
+
+        if(!response.ok)
+        {
+            throw new Error("El servidor no se ha lanzado")
+        }
+
+        return await response.json();
+    }
+    catch(error)
+    {
+        console.log(error);
+        return undefined;
+    }
+}

@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue';
-import { getTeachers,getHours,getCourses,getTramos,getTeacherClassroom,getTeacherClassroomHora,getClassroomCourse } from '@/api/peticiones';
+import { getTeachers,getHours,getCourses,getTramos,getTeacherClassroom,getTeacherClassroomHora,getClassroomCourse,sendErrorInfo } from '@/api/peticiones';
 import { useRouter } from 'vue-router';
-import { separadorNombre,getSpecificTramo,getOldTramo,checkHoraDia } from '../js/utils.js';
+import { separadorNombre,getSpecificTramo,getOldTramo,checkHoraDia,checkData } from '../js/utils.js';
 import { Profesor } from '../models/profesores.js';
 import { Tramo } from '../models/tramos.js';
 //Instancia del router para cambiar de componente
@@ -173,6 +173,11 @@ const getLocTeacherTramo = async (nombre,apellidos,tramo)=>{
     }
 }
 
+/**
+ * Metodo que mediante un curso devuelve la informacion actual de un curso
+ * en tiempo real
+ * @param {string} curso 
+ */
 const getLocTeacherCourse = async(curso) =>{
     const data = await getClassroomCourse(curso);
   
@@ -271,6 +276,9 @@ const mostrarDocente = ()=>{
     }
 }
 
+/**
+ * Evento de localizacion de un curso mostrandolo en un PopUp
+ */
 const mostrarDocenteCurso = ()=>{
     const cursoSelection = document.getElementById("curso");
     let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
@@ -316,6 +324,16 @@ onMounted(async ()=>{
     getCourse();
     getHour();
     getTramo();
+    let error = await checkData();
+    if(typeof error != "undefined" && error.headerInfo!="Servidor no lanzado")
+    {
+        let valor = await sendErrorInfo(error);
+        router.push("/error");
+    }
+    else
+    {
+        router.push("/error");
+    }
 });
 
 /**
