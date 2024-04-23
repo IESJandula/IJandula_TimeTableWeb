@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerAulasPorPlanta,getCourses } from '@/api/peticiones'
-import { DimensionPlano } from '@/models/aulas'
+import { obtenerAulasPorPlanta,getCourses,sendErrorInfo } from '@/api/peticiones';
+import { checkData } from '@/js/utils';
+import { DimensionPlano } from '@/models/aulas';
 import { Grupo } from '@/models/grupos';
 //Instancia del router para cambiar de componente
 const router = useRouter();
@@ -20,6 +21,10 @@ let segundaPlanta = ref(false);
 let recarga = ref(true);
 let aulas = ref([]);
 let cursos = ref([]);
+let errorData = ref(false);
+let header = ref("");
+let content = ref("");
+let interval = undefined;
 
 //Variables privadas
 let _cursos = ref([]);
@@ -139,11 +144,53 @@ const obtenerCursos = async ()=>{
     recarga.value = false;
 }
 
+const checkStatus = async() =>{
+    let error = await checkData();
+    if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
+    {
+        sendErrorInfo(error);
+        router.push("/error");
+    }
+    else if(error.headerInfo=="Servidor no lanzado")
+    {
+        router.push("/error");
+    }
+    else if(error.headerInfo=="Datos de estudiantes no cargados")
+    {
+        sendErrorInfo(error);
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorData.value = true;
+        recarga.value = false;
+    }
+    else if(error.headerInfo=="Datos de planos no cargados")
+    {
+        sendErrorInfo(error);
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorData.value = true;
+        recarga.value = false;
+    }
+    else if(typeof error!="undefined")
+    {
+        header.value = "";
+        content.value = "";
+        errorData.value = false;
+        obtenerCursos();
+        recarga.value = false;
+    }
+}
+
 onMounted(async ()=>{
     root.style.setProperty('--map-width',"662px");
     root.style.setProperty('--map-height',"936px");
     obtenerAulas("PLANTA BAJA");
     obtenerCursos();
+    interval = setInterval(checkStatus,500);
+});
+
+onUnmounted(async ()=>{
+    clearInterval(interval);
 })
 
 watch(recarga,(nuevo,viejo) =>{
@@ -205,7 +252,7 @@ watch(recarga,(nuevo,viejo) =>{
             </ul>
         </div>
    </header> 
-    <div id="djg-main-box" v-show="recarga">
+    <div id="djg-main-box" v-show="recarga" v-if="!errorData">
         <div id="panel">
 
             <div id="panel-selector">
@@ -295,6 +342,15 @@ watch(recarga,(nuevo,viejo) =>{
         <!-- Importación javascript David Jason Gianmoena para que funcionen los controles de los mapas etc.. -->
         <!-- Importante: Esta importación debe residir en la sección final del docuemnto html para que funcione adecuadamente -->
     </div>
+    <div v-else>
+            <div v-show="recarga" id="errorStudent">
+                <header id="errorHeader">
+                    <h1 class="errorContent">{{ header }}</h1>
+                </header>
+                <h1 class="errorContent">{{ content }}</h1>
+            </div>
+
+        </div>
 </template>
 
 <style scoped>
@@ -1061,6 +1117,31 @@ a, li{
 
 .botonMenu{
     cursor: pointer;
+}
+
+.botonMenu{
+    cursor: pointer;
+}
+
+#errorStudent
+{
+    width: 40%;
+    margin-top: 8%;
+    margin-left: 30%;
+    text-align: center;
+}
+
+#errorHeader{
+    width: 80%;
+    font-size: 160%;
+    margin-bottom: 10%;
+    margin-left: 10%;
+    background-color: rgb(241, 241, 224);
+}
+
+.errorContent{
+    color: black;
+    font-size: 160%;  
 }
 
 </style>
