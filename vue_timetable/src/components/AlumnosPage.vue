@@ -1,10 +1,10 @@
 <script setup>
-import { ref, watch,onMounted } from 'vue';
+import { ref, watch,onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getStudentCourses,getSortStudentsCourse,getSortStudents,registrarIda,registrarVuelta,obtenerVisitasAlumno,obtenerVisitasAlumnos } from '@/api/peticiones';
+import { getStudentCourses,getSortStudentsCourse,getSortStudents,registrarIda,registrarVuelta,obtenerVisitasAlumno,obtenerVisitasAlumnos,sendErrorInfo } from '@/api/peticiones';
 import { Alumno } from '@/models/alumnos';
 import { RegistroVisita } from '@/models/visitas';
-import { separadorNombreCurso,compareDate,convertirFecha } from "@/js/utils";
+import { separadorNombreCurso,compareDate,convertirFecha,checkData } from "@/js/utils";
 //Instancia del router
 const router = useRouter();
 const body = document.getElementById("body");
@@ -25,8 +25,11 @@ let mostrarVisitas = ref(false);
 let infoEstadisticas = ref("");
 let estiloEstadisticas = ref("");
 let infoListado = ref("");
-let estiloListado = ref("");
 let mostrarListado = ref(false);
+let errorAlumnos = ref(false);
+let header = ref("");
+let content = ref("");
+let interval = undefined;
 
 //Variables privadas
 let _alumnos = ref([]);
@@ -426,12 +429,48 @@ const onClickListado = () =>{
         obtenerVisitaAlumnos(valorFechaInicio,valorFechaFin); 
     }
 }
+
+const checkStatus = async() =>{
+    let error = await checkData();
+    if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
+    {
+        sendErrorInfo(error);
+        router.push("/error");
+    }
+    else if(error.headerInfo=="Servidor no lanzado")
+    {
+        router.push("/error");
+    }
+    else if(error.headerInfo=="Datos de estudiantes no cargados")
+    {
+        sendErrorInfo(error);
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorAlumnos.value = true;
+        recarga.value = false;
+    }
+    else if(typeof error!="undefined")
+    {
+        header.value = "";
+        content.value = "";
+        errorAlumnos.value = false;
+        getCourse();
+        cargarAlumnos();
+        recarga.value = false;
+    }
+}
+
 /**
  * Metodo que se encarga de recoger los datos al entrar en la pagina
  */
 onMounted( async () =>{
     getCourse();
     cargarAlumnos();
+    interval = setInterval(checkStatus,500);
+});
+
+onUnmounted(async ()=>{
+    clearInterval(interval);
 })
 
 /**
@@ -489,249 +528,260 @@ watch(alumnos,(nuevo,viejo) => {
                 </ul>
             </div>
        </header> 
+       <div v-if="!errorAlumnos">
+            <div class="table-title">
+                <h2>Info Alumnos</h2>
+            </div>
 
-        <div class="table-title">
-            <h2>Info Alumnos</h2>
-        </div>
+            <div class="container-table-info-alumnos" v-show="recarga">
 
-        <div class="container-table-info-alumnos" v-show="recarga">
+                <div class="selectores">
+                    <form>
+                        <label for="selector-curso">Cursos:</label>
+                        <select name="selector-curso" id="selector-curso" v-on:change="onChangeCursoInfoAlumno()">
+                            <option selected>Seleccionar</option>
+                            <option v-for="i in cursos">{{ i }}</option>
+                        </select>
+                    </form>
 
-            <div class="selectores">
-                <form>
-                    <label for="selector-curso">Cursos:</label>
-                    <select name="selector-curso" id="selector-curso" v-on:change="onChangeCursoInfoAlumno()">
-                        <option selected>Seleccionar</option>
-                        <option v-for="i in cursos">{{ i }}</option>
-                    </select>
-                </form>
+                    <form>
+                        <label for="selector-alumno">Alumnos:</label>
+                        <select name="selector-alumno" id="selector-alumno">
+                            <option selected>Seleccionar</option>
+                            <option v-for="i in _infoAlumnos" v-show="_mostrarInfoAlumnos">{{ i }}</option>
+                        </select>
+                    </form>
+                </div>
+                
+                <div class="tabla-info-alumno">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Correo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+        
+                        <tbody>
+                            <tr>
+                                <td>Vicente Serrano</td>
+                                <td>*****@g.educaand.es</td>
+                                <td>
+                                    <span class="action-btn">
+                                        <a>Info Tutor</a>
+                                        <a>Info Tutor Legal</a>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+        
+                </div>
+            </div>
 
-                <form>
-                    <label for="selector-alumno">Alumnos:</label>
-                    <select name="selector-alumno" id="selector-alumno">
-                        <option selected>Seleccionar</option>
-                        <option v-for="i in _infoAlumnos" v-show="_mostrarInfoAlumnos">{{ i }}</option>
-                    </select>
-                </form>
-             </div>
+
+            <!--Tabla 1: Hace referencia al registro de ida y vuelta del baño de un alumno-->
+
             
-            <div class="tabla-info-alumno">
+            <div class="table-title">
+                <h2>Registrar ida y vuelta</h2>
+            </div>
+
+            <div class="table-record-01" v-show="recarga">
+
+                <div class="configuration-header">
+                
+                    <div class="add">
+                        <span>Datos: </span>
+                        <select name="course-select" id="cursoBathroom" v-on:change="onChangeCursoIdaVuelta()">
+                            <option selected>Seleccionar</option>
+                            <option v-for="i in cursos">{{ i }}</option>
+                        </select>
+        
+                        <select name="name-select" id="alumnosIdaVuelta" v-on:change="onChangeAlumnosIdaVuelta()">
+                            <option selected>Nombre y apellidos</option>
+                            <option v-for="i in _idaVueltaAlumnos" v-show="_mostrarIdaVueltaAlumnos">{{ i }}</option>
+                        </select>
+
+                    </div>
+        
+                </div>
+
                 <table>
+
                     <thead>
                         <tr>
                             <th>Nombre</th>
-                            <th>Correo</th>
+                            <th>Apellidos</th>
+                            <th>Curso</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-    
+
                     <tbody>
                         <tr>
-                            <td>Vicente Serrano</td>
-                            <td>*****@g.educaand.es</td>
+                            <td>{{ idaVuelta[0] }}</td>
+                            <td>{{ idaVuelta[1] }}</td>
+                            <td>{{ idaVuelta[2] }}</td>
                             <td>
                                 <span class="action-btn">
-                                    <a>Info Tutor</a>
-                                    <a>Info Tutor Legal</a>
+                                    <a href="#" v-on:click="onClickIda()">Ida</a>
+                                    <a href="#" v-on:click="onClickVuelta()">Vuelta</a>
                                 </span>
                             </td>
                         </tr>
                     </tbody>
+
                 </table>
-    
+                <h2 v-bind:style="estiloIdaVuelta" v-show="infoIdaVuelta!=''">{{ infoIdaVuelta }}</h2>
+
             </div>
-        </div>
 
+            <!--Tabla 2: Hace referencia a las estadísticas determinadas de un alumno-->
 
-        <!--Tabla 1: Hace referencia al registro de ida y vuelta del baño de un alumno-->
+            <div class="table-title">
+                <h2>Estadísticas del alumno</h2>
+            </div>
 
+            <div class="table-record-02" v-show="recarga">
+
+                <div class="configuration-header">
+                
+                    <div class="add">
+                        <span>Datos: </span>
+                        <select name="course-select" id="cursoStats" v-on:change="onChangeStats()">
+                            <option selected>Seleccionar</option>
+                            <option v-for="i in cursos">{{ i }}</option>
+                        </select>
         
-        <div class="table-title">
-            <h2>Registrar ida y vuelta</h2>
-        </div>
+                        <select name="name-select" id="alumnosStats" v-on:change="onChangeAlumnosStats()">
+                            <option value="group-option">Nombre y apellidos</option>
+                            <option v-for="i in _statsAlumnos" v-show="_statsAlumnos">{{ i }}</option>
+                        </select>
 
-        <div class="table-record-01" v-show="recarga">
+                    </div>
 
-            <div class="configuration-header">
-            
-                <div class="add">
-                    <span>Datos: </span>
-                    <select name="course-select" id="cursoBathroom" v-on:change="onChangeCursoIdaVuelta()">
-                        <option selected>Seleccionar</option>
-                        <option v-for="i in cursos">{{ i }}</option>
-                    </select>
-    
-                    <select name="name-select" id="alumnosIdaVuelta" v-on:change="onChangeAlumnosIdaVuelta()">
-                        <option selected>Nombre y apellidos</option>
-                        <option v-for="i in _idaVueltaAlumnos" v-show="_mostrarIdaVueltaAlumnos">{{ i }}</option>
-                    </select>
-
+                    <div class="date">
+                        <span>Periodo</span>
+                        <input type="date" title="Fecha de inicio" class="date-search" placeholder="Fecha inicio" id="fechaInicio">
+                        <input type="date" title="Fecha de fin" class="date-search" placeholder="Fecha fin" id="fechaFin">
+                        <br>
+                        <button id="botonStats" v-on:click="onClickStats()">Buscar</button>
+                    </div>
+        
                 </div>
-    
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Apellidos</th>
+                            <th>Curso</th>
+                            <th>Veces idas al baño</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>{{ stats[0] }}</td>
+                            <td>{{ stats[1] }}</td>
+                            <td>{{ stats[2] }}</td>
+                            <td>{{ stats[3] }}</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Días</th>
+                            <th>Horas</th>
+                        </tr>
+                    </thead>
+
+                    <tbody v-if="!mostrarVisitas">
+                        <tr>
+                            <td>?</td>
+                            <td>?</td>
+                        </tr>
+                    </tbody>
+                    <tbody v-else>
+                        <tr v-for="i in _visitasAlumno">
+                            <td>{{ i.dia }}</td>
+                            <td>{{ i.hora }}</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+                <h2 v-bind:style="estiloEstadisticas" v-show="infoEstadisticas!=''">{{ infoEstadisticas }}</h2>
+
             </div>
 
-            <table>
+            <!--Tabla 3: Hace referencia a la lista de alumnos con el número de veces que han ido al baño-->
 
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Apellidos</th>
-                        <th>Curso</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr>
-                        <td>{{ idaVuelta[0] }}</td>
-                        <td>{{ idaVuelta[1] }}</td>
-                        <td>{{ idaVuelta[2] }}</td>
-                        <td>
-                            <span class="action-btn">
-                                <a href="#" v-on:click="onClickIda()">Ida</a>
-                                <a href="#" v-on:click="onClickVuelta()">Vuelta</a>
-                            </span>
-                        </td>
-                    </tr>
-                </tbody>
-
-            </table>
-            <h2 v-bind:style="estiloIdaVuelta" v-show="infoIdaVuelta!=''">{{ infoIdaVuelta }}</h2>
-
-        </div>
-
-        <!--Tabla 2: Hace referencia a las estadísticas determinadas de un alumno-->
-
-        <div class="table-title">
-            <h2>Estadísticas del alumno</h2>
-        </div>
-
-        <div class="table-record-02" v-show="recarga">
-
-            <div class="configuration-header">
-            
-                <div class="add">
-                    <span>Datos: </span>
-                    <select name="course-select" id="cursoStats" v-on:change="onChangeStats()">
-                        <option selected>Seleccionar</option>
-                        <option v-for="i in cursos">{{ i }}</option>
-                    </select>
-    
-                    <select name="name-select" id="alumnosStats" v-on:change="onChangeAlumnosStats()">
-                        <option value="group-option">Nombre y apellidos</option>
-                        <option v-for="i in _statsAlumnos" v-show="_statsAlumnos">{{ i }}</option>
-                    </select>
-
-                </div>
-
-                <div class="date">
-                    <span>Periodo</span>
-                    <input type="date" title="Fecha de inicio" class="date-search" placeholder="Fecha inicio" id="fechaInicio">
-                    <input type="date" title="Fecha de fin" class="date-search" placeholder="Fecha fin" id="fechaFin">
-                    <br>
-                    <button id="botonStats" v-on:click="onClickStats()">Buscar</button>
-                </div>
-    
+            <div class="table-title">
+                <h2>Listado de alumnos</h2>
             </div>
 
-            <table>
+            <div class="table-record-03" v-show="recarga">
 
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Apellidos</th>
-                        <th>Curso</th>
-                        <th>Veces idas al baño</th>
-                    </tr>
-                </thead>
+                <div class="configuration-header">
 
-                <tbody>
-                    <tr>
-                        <td>{{ stats[0] }}</td>
-                        <td>{{ stats[1] }}</td>
-                        <td>{{ stats[2] }}</td>
-                        <td>{{ stats[3] }}</td>
-                    </tr>
-                </tbody>
-
-            </table>
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>Días</th>
-                        <th>Horas</th>
-                    </tr>
-                </thead>
-
-                <tbody v-if="!mostrarVisitas">
-                    <tr>
-                        <td>?</td>
-                        <td>?</td>
-                    </tr>
-                </tbody>
-                <tbody v-else>
-                    <tr v-for="i in _visitasAlumno">
-                        <td>{{ i.dia }}</td>
-                        <td>{{ i.hora }}</td>
-                    </tr>
-                </tbody>
-
-            </table>
-            <h2 v-bind:style="estiloEstadisticas" v-show="infoEstadisticas!=''">{{ infoEstadisticas }}</h2>
-
-        </div>
-
-        <!--Tabla 3: Hace referencia a la lista de alumnos con el número de veces que han ido al baño-->
-
-        <div class="table-title">
-            <h2>Listado de alumnos</h2>
-        </div>
-
-        <div class="table-record-03" v-show="recarga">
-
-            <div class="configuration-header">
-
-                <div class="date">
-                    <span>Periodo</span>
-                    <input type="date" title="Fecha de inicio" class="date-search" placeholder="Fecha inicio" id="fechaListadoInicio">
-                    <input type="date" title="Fecha de fin" class="date-search" placeholder="Fecha fin" id="fechaListadoFinal">
-                    <br>
-                    <button id="botonStats" v-on:click="onClickListado()">Buscar</button>
+                    <div class="date">
+                        <span>Periodo</span>
+                        <input type="date" title="Fecha de inicio" class="date-search" placeholder="Fecha inicio" id="fechaListadoInicio">
+                        <input type="date" title="Fecha de fin" class="date-search" placeholder="Fecha fin" id="fechaListadoFinal">
+                        <br>
+                        <button id="botonStats" v-on:click="onClickListado()">Buscar</button>
+                    </div>
+        
                 </div>
-    
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Apellidos</th>
+                            <th>Curso</th>
+                            <th>Veces idas al baño</th>
+                        </tr>
+                    </thead>
+
+                    <tbody v-if="!mostrarListado">
+                        <tr>
+                            <td>?</td>
+                            <td>?</td>
+                            <td>?</td>
+                            <td>?</td>
+                        </tr>
+                    </tbody>
+                    <tbody v-else>
+                        <tr v-for="i in _listadoAlumno">
+                            <td>{{ i.nombre }}</td>
+                            <td>{{ i.apellidos }}</td>
+                            <td>{{ i.curso }}</td>
+                            <td>{{ i.numBathroom }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+        <div v-else>
+            <div v-show="recarga" id="errorStudent">
+                <header id="errorHeader">
+                    <h1>{{ header }}</h1>
+                </header>
+                <h1>{{ content }}</h1>
             </div>
 
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Apellidos</th>
-                        <th>Curso</th>
-                        <th>Veces idas al baño</th>
-                    </tr>
-                </thead>
-
-                <tbody v-if="!mostrarListado">
-                    <tr>
-                        <td>?</td>
-                        <td>?</td>
-                        <td>?</td>
-                        <td>?</td>
-                    </tr>
-                </tbody>
-                <tbody v-else>
-                    <tr v-for="i in _listadoAlumno">
-                        <td>{{ i.nombre }}</td>
-                        <td>{{ i.apellidos }}</td>
-                        <td>{{ i.curso }}</td>
-                        <td>{{ i.numBathroom }}</td>
-                    </tr>
-                </tbody>
-            </table>
-
         </div>
+        
 
 </template>
 
@@ -1060,4 +1110,20 @@ a, li{
     cursor: pointer;
 }
 
+#errorStudent
+{
+    width: 40%;
+    margin-top: 8%;
+    margin-left: 30%;
+    text-align: center;
+}
+
+#errorHeader{
+    font-size: 300%;
+    width: 80%;
+    font-size: 160%;
+    margin-bottom: 10%;
+    margin-left: 10%;
+    background-color: rgb(230, 253, 253);
+}
 </style>
