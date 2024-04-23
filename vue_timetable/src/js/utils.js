@@ -267,7 +267,7 @@ export const checkData = async()=>{
         else if(data.error == "Error de datos de planos")
         {
             return {
-                headerInfo:"Datos de estudiantes no cargados",
+                headerInfo:"Datos de planos no cargados",
                 infoError:"El administrador aun no ha cargado los datos de los planos en el servidor cuando los cargue se cargara automaticamente la pagina gracias por la espera",
                 wait:true
             };
