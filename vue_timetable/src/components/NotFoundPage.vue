@@ -56,7 +56,7 @@ const checkStatus = async()=>{
 
 onMounted(async()=>{
     setError();
-    interval = setInterval(checkStatus,10000);
+    interval = setInterval(checkStatus,5000);
 })
 
 onUnmounted(async ()=>{
