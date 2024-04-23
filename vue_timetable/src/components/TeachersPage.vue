@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { getTeachers,getHours,getCourses,getTramos,getTeacherClassroom,getTeacherClassroomHora,getClassroomCourse,sendErrorInfo } from '@/api/peticiones';
 import { useRouter } from 'vue-router';
 import { separadorNombre,getSpecificTramo,getOldTramo,checkHoraDia,checkData } from '../js/utils.js';
@@ -24,6 +24,7 @@ let infoNombreAula = ref("");
 let noAula = ref("");
 let info = ref(false);
 let recarga = ref(true);
+let interval = undefined;
 
 //Variables privadas
 let _profesores = ref([]);
@@ -316,14 +317,7 @@ const onchangeHour = ()=>{
    
 }
 
-/**
- * Metodo que se encarga de recoger los datos al entrar en la pagina
- */
-onMounted(async ()=>{
-    getTeacher();
-    getCourse();
-    getHour();
-    getTramo();
+const checkStatus = async() =>{
     let error = await checkData();
     if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
     {
@@ -334,7 +328,22 @@ onMounted(async ()=>{
     {
         router.push("/error");
     }
+}
+
+/**
+ * Metodo que se encarga de recoger los datos al entrar en la pagina
+ */
+onMounted(async ()=>{
+    getTeacher();
+    getCourse();
+    getHour();
+    getTramo();
+    interval = setInterval(checkStatus,500);
 });
+
+onUnmounted(async()=>{
+    clearInterval(interval);
+})
 
 /**
  * Metodo observador que la variable nuevo (booleana) cambie par recargar la pagina
