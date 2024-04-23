@@ -1,9 +1,9 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getTeachers,getCourses,descargarPdfProfesores,descargarPdfTodosProfesores,descargarPdfGrupo,descargarPdfGrupos } from '@/api/peticiones';
+import { getTeachers,getCourses,descargarPdfProfesores,descargarPdfTodosProfesores,descargarPdfGrupo,descargarPdfGrupos,sendErrorInfo } from '@/api/peticiones';
 import { Profesor } from '@/models/profesores';
-import { separadorNombre } from '@/js/utils';
+import { separadorNombre,checkData } from '@/js/utils';
 
 //Instancia del router
 const router = useRouter();
@@ -18,6 +18,7 @@ let profesores = ref([]);
 let cursos = ref([]);
 let recarga = ref(true);
 let enlacePdf = ref("/Horario.pdf");
+let interval = undefined;
 //Variables privadas
 let _profesores = ref([]);
 
@@ -172,13 +173,31 @@ const onClickGrupo = () =>{
     
 }
 
+const checkStatus = async() =>{
+    let error = await checkData();
+    if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
+    {
+        sendErrorInfo(error);
+        router.push("/error");
+    }
+    else if(error.headerInfo=="Servidor no lanzado")
+    {
+        router.push("/error");
+    }
+}
+
 /**
  * Metodo que se encarga de recoger los datos al entrar en la pagina
  */
 onMounted(async ()=>{
     cargarProfesores();
     cargarCursos();
+    interval = setInterval(checkStatus,500);
 });
+
+onUnmounted(async ()=>{
+    clearInterval(interval);
+})
 
 /**
  * Metodo observador que la variable nuevo (booleana) cambie par recargar la pagina
