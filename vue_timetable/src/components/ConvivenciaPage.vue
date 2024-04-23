@@ -1,7 +1,8 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import { getStudentCourses,getPoints,getSortStudentsCourse } from '@/api/peticiones';
-import { ref,onMounted, watch } from 'vue';
+import { getStudentCourses,getPoints,getSortStudentsCourse,sendErrorInfo } from '@/api/peticiones';
+import { checkData } from '@/js/utils';
+import { ref,onMounted, watch,onUnmounted } from 'vue';
 import { Puntos } from '../models/puntos.js'
 //Instancia del router
 const router = useRouter();
@@ -17,6 +18,10 @@ let alumnos = ref([]);
 let puntos = ref([]);
 let recarga = ref(true);
 let mostrarAlumnos = ref(false);
+let errorAlumnos = ref(false);
+let header = ref("");
+let content = ref("");
+let interval = undefined;
 //Variables privadas
 let _puntos = ref([]);
 
@@ -119,13 +124,48 @@ const onChangedCurso = ()=>{
     }
 }
 
+const checkStatus = async() =>{
+    let error = await checkData();
+    if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
+    {
+        sendErrorInfo(error);
+        router.push("/error");
+    }
+    else if(error.headerInfo=="Servidor no lanzado")
+    {
+        router.push("/error");
+    }
+    else if(error.headerInfo=="Datos de estudiantes no cargados")
+    {
+        sendErrorInfo(error);
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorAlumnos.value = true;
+        recarga.value = false;
+    }
+    else if(typeof error!="undefined")
+    {
+        header.value = "";
+        content.value = "";
+        errorAlumnos.value = false;
+        getCourse();
+        cargarAlumnos();
+        recarga.value = false;
+    }
+}
+
 /**
  * Metodo que se encarga de recoger los datos al entrar en la pagina
  */
 onMounted(async ()=>{
     getCourse();
     cargarPuntos();
+    interval = setInterval(checkStatus,500);
 });
+
+onUnmounted(async ()=>{
+    clearInterval(interval);
+})
 
 /**
  * Metodo observador que la variable nuevo (booleana) cambie par recargar la pagina
@@ -157,7 +197,7 @@ watch(recarga,(nuevo,viejo)=>{
         </div>
    </header> 
 
-    <div class="opcion" v-show="recarga"> 
+    <div class="opcion" v-show="recarga" v-if="!errorAlumnos"> 
 
         <div>
             <h2>Docente actualmente de guardia: <span id="docenteguardia"><!--Aqui se integra el maestro de guardia en ese momento --> Valor automatico. </span></h2>
@@ -191,9 +231,17 @@ watch(recarga,(nuevo,viejo)=>{
             </div>
     
         </div>
-    </div>   
+    </div>  
+    <div v-else>
+        <div v-show="recarga" id="errorStudent">
+            <header id="errorHeader">
+                <h1 class="errorContent">{{ header }}</h1>
+            </header>
+            <h1 class="errorContent">{{ content }}</h1>
+        </div>
+    </div> 
 
-<div id="contenedorPDF">
+<div id="contenedorPDF" v-show="!errorAlumnos">
     <embed type="text/html" src="/Puntos_Plan_De_Convivencia.pdf"  width="60%" height="700px">
 </div>
 
@@ -387,5 +435,30 @@ a, li{
     cursor: pointer;
 }
 
+.botonMenu{
+    cursor: pointer;
+}
+
+#errorStudent
+{
+    width: 40%;
+    margin-top: 8%;
+    margin-left: 30%;
+    text-align: center;
+}
+
+#errorHeader{
+    font-size: 300%;
+    width: 80%;
+    font-size: 160%;
+    margin-bottom: 10%;
+    margin-left: 10%;
+    background-color: skyblue;
+}
+
+.errorContent{
+    color: black;
+    background-color: skyblue;  
+}
 
 </style>
