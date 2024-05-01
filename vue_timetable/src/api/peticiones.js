@@ -600,7 +600,7 @@ export const obtenerAulasPorPlanta = async(planta) =>{
 export const checkServerData = async()=>{
     try
     {
-        let url = "http://localhost:8088/horarios/check-data";
+        let url = "http://localhost:8088/horarios/check-data"; 
 
         const response = await fetch(url);
 
@@ -704,5 +704,39 @@ export const getInfoError = async()=>{
             return undefined;
         }
         
+    }
+}
+
+/**
+ * Metodo que realiza una peticion al servidor enviando un aula como parametro
+ * y recibiendo informacion en tiempo real del aula mandada
+ * @param {string} numIntAu 
+ * @param {string} abreviatura 
+ * @param {string} nombre 
+ * @returns Profesor que se encuentra en el aula, la asignatura que esta impartiendo y el grupo que esta recibiendo esa asignatura
+ */
+export const getAulaNow = async(numIntAu,abreviatura,nombre) =>{
+    try
+    {
+        const params = {
+            numIntAu:numIntAu,
+            abreviatura:abreviatura,
+            nombre,nombre
+        };
+
+        let url = "http://localhost:8088/horarios/get/aula-now?"+new URLSearchParams(params).toString();
+
+        const response = await fetch(url);
+
+        if(!response.ok)
+        {
+            throw new Error("Error al obtener la informacion actual del aula");
+        }
+
+        return await response.json();
+    }
+    catch(error)
+    {
+        console.log(error);
     }
 }
