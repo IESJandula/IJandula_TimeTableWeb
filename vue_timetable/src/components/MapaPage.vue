@@ -1,9 +1,9 @@
 <script setup>
 import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerAulasPorPlanta,getCourses,sendErrorInfo } from '@/api/peticiones';
+import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow } from '@/api/peticiones';
 import { checkData } from '@/js/utils';
-import { DimensionPlano } from '@/models/aulas';
+import { Aula, DimensionPlano } from '@/models/aulas';
 import { Grupo } from '@/models/grupos';
 //Instancia del router para cambiar de componente
 const router = useRouter();
@@ -25,6 +25,10 @@ let errorData = ref(false);
 let header = ref("");
 let content = ref("");
 let interval = undefined;
+let infoAula = ref("");
+let infoProfe = ref("");
+let infoAsignatura = ref("");
+let infoGrupo = ref("");
 
 //Variables privadas
 let _cursos = ref([]);
@@ -181,6 +185,33 @@ const checkStatus = async() =>{
     }
 }
 
+/**
+ * Metodo que se encarga de mandar al servidor un aula y recibir
+ * y transformar los datos adicionales para mostrarlos en un
+ * cuadro en la web
+ * @param {Aula} aula 
+ */
+const obtenerInfoAula = async (aula)=>{
+    const data = await getAulaNow(aula.numIntAu,aula.abreviatura,aula.nombre);
+    
+    if(typeof data == "undefined")
+    {
+        infoAula.value = "En el aula "+aula.abreviatura+" no se encuentra nadie";
+        infoProfe.value = "";
+        infoAsignatura.value = "";
+        infoGrupo.value = "";
+        recarga.value = false;
+    }
+    else
+    {
+        infoAula.value = "Aula: "+aula.nombre;
+        infoProfe.value = "Profesor: "+data.profesor.nombre+" "+data.profesor.primerApellido+" "+data.profesor.segundoApellido;
+        infoAsignatura.value = "Asignatura: "+data.asignatura.nombre;
+        infoGrupo.value = "Grupo: "+data.grupo.nombre;
+        recarga.value = false;
+    }
+}
+
 onMounted(async ()=>{
     root.style.setProperty('--map-width',"662px");
     root.style.setProperty('--map-height',"936px");
@@ -202,37 +233,6 @@ watch(recarga,(nuevo,viejo) =>{
 </script>
 
 <template>
-    <div id="cuadro">
-        <span style="color: black"> 
-            <hr style="width:100%;text-align:left;margin-left:0">
-        <p><strong>Alumnos en clase</strong></p>
-        <hr style="width:100%;text-align:left;margin-left:0; color:black !important;">
-        </span>
-        <p>Aitor Mentas Fuertes</p>
-        <p>Alex Cremento</p>
-        <p>Ana Tomía</p>
-        <p>Armando Bronca Segura</p>
-    </div>
-    
-    <div id="cuadro2">
-        <span style="color: black"> 
-            <hr style="width:100%;text-align:left;margin-left:0">
-        <p><strong>Alumnos en clase</strong></p>
-        <hr style="width:100%;text-align:left;margin-left:0; color:black !important;">
-        </span>
-        <p>Armando Bronca Segura</p>
-        <p>Ana Tomía</p>
-        <p>Michael Rosal</p>
-        <p>Alex Cremento</p>
-        <p>Aitor Mentas Fuertes</p>
-        <br>
-        <hr>
-        <p style="color: rgb(163, 40, 9);"><strong>Alumnos en el lavabo</strong></p>
-        <hr>
-        <p>Suma Incon Tinentia</p>
-    </div>
-    <!-- GUARRADA ABSURDA PARA DEMO - BORRAR LUEGO -->
-    
     <header class="header">
         <div class="logo-header">
             <a href=""><img src="/logo.png" alt="logo"></a>
@@ -273,23 +273,24 @@ watch(recarga,(nuevo,viejo) =>{
             <div id="contenedor-botones-rotacion">
 
                 <p class="titulo-djg" >Mostrar planta.</p>
-                <center>
-                <!-- Botones de selección manual de planta -->
-                <div id="contenedor-botones-plantas"> 
-                    <button id="boton-planta-baja" v-on:click="onClickPrimeraPlanta()">Planta<br/>baja</button>
-                    <button id="boton-planta-primera" v-on:click="onClickSegundaPlanta()">Planta<br/>primera</button>
-                    <button id="boton-planta-segunda" v-on:click="onClickTerceraPlanta()">Planta<br/>segunda</button>
-                </div>
-                <!-- este div solo sirve para reflejar al usuario el estado de la rotación, por defecto desactivada-->
-                <div id="indicador">Rotacion: Desactivada</div>
+                <div style="display: block; align-items: center;">
+                    <!-- Botones de selección manual de planta -->
+                    <div id="contenedor-botones-plantas"> 
+                        <button id="boton-planta-baja" v-on:click="onClickPrimeraPlanta()">Planta<br/>baja</button>
+                        <button id="boton-planta-primera" v-on:click="onClickSegundaPlanta()">Planta<br/>primera</button>
+                        <button id="boton-planta-segunda" v-on:click="onClickTerceraPlanta()">Planta<br/>segunda</button>
+                    </div>
+                    <!-- este div solo sirve para reflejar al usuario el estado de la rotación, por defecto desactivada-->
+                    <div id="indicador">Rotacion: Desactivada</div>
 
-                <!-- Botones de rotacion automatica -->
-                <button id="boton-autorotacion">03s</button>
-                <button id="rotacion-5">05s</button>
-                <button id="rotacion-10">10s</button>
-                <button id="rotacion-15">15s</button>
-                <button id="rotacion-20">20s</button>
-                <button id="rotacion-30">30s</button></center>
+                    <!-- Botones de rotacion automatica -->
+                    <button id="boton-autorotacion">03s</button>
+                    <button id="rotacion-5">05s</button>
+                    <button id="rotacion-10">10s</button>
+                    <button id="rotacion-15">15s</button>
+                    <button id="rotacion-20">20s</button>
+                    <button id="rotacion-30">30s</button>
+                </div>
             </div>
 
             <!-- INICIO  Menu desplegable para seleccion de tamaño caja mapa  -->
@@ -316,7 +317,22 @@ watch(recarga,(nuevo,viejo) =>{
             <!-- INICIO  Caja donde se deberá renderizar la información recuperada mediante los endpoints y back-end -->
             <div id="contenedor-info-box-endpoints">
             <p class="titulo-djg">Información del aula.</p>
-                <p><span> Seleccione un aula. </span> </p>
+                <div v-if="infoAula==''">
+                    <p ><span> Seleccione un aula. </span> </p>
+                </div>
+                <div v-else-if="infoAula!='' && infoProfe=='' && infoAsignatura=='' && infoGrupo==''">
+                    <p><span>{{ infoAula }}</span></p>
+                </div>
+                <div v-else>
+                    <p><span>{{ infoAula }}</span></p>
+                    <br>
+                    <p><span>{{ infoProfe }}</span></p>
+                    <br>
+                    <p><span>{{ infoAsignatura }}</span></p>
+                    <br>
+                    <p><span>{{ infoGrupo }}</span></p>
+                </div>
+                
 
             </div>
             <!-- FIN  Caja donde se deberá renderizar la información recuperada mediante los endpoints y back-end -->
@@ -326,15 +342,15 @@ watch(recarga,(nuevo,viejo) =>{
         <div class="contenedor">       
           
                 <div id="planta-baja" class="caja-mapa" v-show="plantaBaja">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)"></div>
+                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)"></div>
                 </div>   
 
                 <div id="planta-primera" class="caja-mapa" v-show="primeraPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)"></div>
+                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)"></div>
                 </div>
 
                 <div id="planta-segunda" class=" caja-mapa" v-show="segundaPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)"></div>
+                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)"></div>
                 </div>
         </div>
         <!-- FINAL Sección Mapas del centro -->
@@ -682,352 +698,6 @@ button {
  #planta-baja>*:hover, #planta-primera>*:hover, #planta-segunda:hover>*:hover {
     background-color: rgba(28, 46, 146, 0.5);
     border: 1px solid gray;
-}
-
-
-/*A PARTIR DE AQUI SE ESTABLECEN LAS COORDENADAS DE LOS DIVS QUE REPRESENTAN LAS AULAS EN LOS PLANOS*/
-
-/*ELEMENTOS AULAS PLANTA BAJA*/
-#aula-2ndo-Guia {
-    height: 6%;
-    width: 7%;
-    top: 1.6%;
-    left: 14%;
-   
-}
-
-#aula-1ero-Guia-A {
-    height: 6%;
-    width: 7%;
-    top: 1.6%;
-    left: 21%;
-   
-}
-
-#aula-1ero-Guia-B {
-    height: 7.5%;
-    width: 6.5%;
-    top: 1.6%;
-    left: 28%;
- 
-}
-
-#gimnasio {
-    height: 5%;
-    width: 18.4%;
-    top: 15%;
-    left: 12%;
-
-}
-
-#aula0-11 {
-    height: 5%;
-    width: 8.1%;
-    top: 12.8%;
-    left: 44.2%;
-}
-
-#aula0-9 {
-    height: 5%;
-    width: 11.2%;
-    top: 12.8%;
-    left: 52.8%;
-  
-}
-
-#aula0-5 {
-    height: 4.8%;
-    width: 9%;
-    top: 13.5%;
-    right: 12.8%;
-   
-}
-
-#aula0-7 {
-    height: 5%;
-    width: 6.9%;
-    top: 18.6%;
-    right: 15%;
-}
-
-#pista-padel {
-    height: 7%;
-    width: 20%;
-    top: 4.8%;
-    right: 8.9%;
-    transform: rotate(5.50deg);
-}
-
-#aula0-3 {
-    height: 4.8%;
-    width: 3.6%;
-    top: 30.82%;
-    right: 13.8%;
-
-}
-
-#aula0-1 {
-    height: 5%;
-    width: 5.5%;
-    top: 30.8%;
-    right: 17.7%;
-  
-}
-
-#aula0-2-norte {
-    height: 6.5%;
-    width: 4.5%;
-    top: 36.5%;
-    left: 12%;
-    
-}
-
-#aula0-2-sur {
-    height: 6.5%;
-    width: 4.5%;
-    top: 36.5%;
-    left: 16.7%;
-   
-}
-
-/*ELEMENTOS AULAS PLANTA PRIMERA*/
-#aula1-11 {
-    height: 12.5%;
-    width: 11.3%;
-    top: 5%;
-    right: 4.9%;
-}
-
-#aula1-9 {
-    height: 6%;
-    width: 11.6%;
-    top: 26.5%;
-    right: 6.1%;
-}
-
-#aula1-7 {
-    height: 6%;
-    width: 11.6%;
-    top: 26.5%;
-    right: 18.3%;
-}
-
-#aula1-5 {
-    height: 6%;
-    width: 11.6%;
-    top: 26.5%;
-    right: 29.75%;
-}
-
-#aula1-3 {
-    height: 6%;
-    width: 11.6%;
-    top: 26.5%;
-    right: 41.3%;
-}
-
-#aula1-1 {
-    height: 6%;
-    width: 5.5%;
-    top: 18%;
-    right: 53.1%;
-}
-
-#aula1-19 {
-    height: 6.4%;
-    width: 5.4%;
-    top: 26.5%;
-    right: 53.1%;
-}
-
-#aula1-17 {
-    height: 6.4%;
-    width: 11.6%;
-    top: 18%;
-    right: 41.2%;
-}
-
-#aula1-15 {
-    height: 6.4%;
-    width: 11.6%;
-    top: 18%;
-    right: 29.7%;
-}
-
-#aula1-13 {
-    height: 6.4%;
-    width: 11.6%;
-    top: 18%;
-    right: 18.2%;
-}
-
-#aula1-2 {
-    height: 6.2%;
-    width: 11.5%;
-    top: 27%;
-    left: 24.6%;
-}
-
-#aula1-4 {
-    height: 6.2%;
-    width: 11.5%;
-    top: 27%;
-    left: 12.9%;
-}
-
-#aula1-6 {
-    height: 6.2%;
-    width: 11.5%;
-    top: 27%;
-    left: 1.3%;
-}
-
-#aula1-8 {
-    height: 6%;
-    width: 11.3%;
-    top: 35.5%;
-    left: 1.3%;
-}
-
-#aula1-10 {
-    height: 6%;
-    width: 5.5%;
-    top: 35.5%;
-    left: 12.9%
-}
-
-#aula1-12 {
-    height: 6%;
-    width: 11.3%;
-    top: 35.5%;
-    left: 18.7%
-}
-
-/*ELEMENTOS AULAS PLANTA SEGUNDA*/
-#aula2-11 {
-    height: 6.8%;
-    width: 11.3%;
-    top: 4.0%;
-    right: 4.5%;
-}
-
-#aula2-13 {
-    height: 6%;
-    width: 8.9%;
-    top: 11%;
-    right: 7.0%;
-}
-
-#aula2-9 {
-    height: 6%;
-    width: 11.7%;
-    top: 25.8%;
-    right: 5.9%;
-}
-
-#aula2-7 {
-    height: 6%;
-    width: 11.1%;
-    top: 25.8%;
-    right: 18.0%;
-}
-
-#aula2-5 {
-    height: 6%;
-    width: 11.2%;
-    top: 25.8%;
-    right: 29.45%;
-}
-
-#aula2-3 {
-    height: 6%;
-    width: 11.6%;
-    top: 25.8%;
-    right: 41.0%;
-}
-
-#aula2-1 {
-    height: 6%;
-    width: 5.5%;
-    top: 25.8%;
-    right: 52.9%;
-}
-
-#aula2-23 {
-    height: 6%;
-    width: 4.6%;
-    top: 17.2%;
-    right: 54.1%;
-}
-
-#aula2-21 {
-    height: 6%;
-    width: 4%;
-    top: 17.2%;
-    right: 50.0%;
-}
-
-#aula2-19 {
-    height: 6%;
-    width: 8.7%;
-    top: 17.2%;
-    right: 41.0%;
-}
-
-#aula2-17 {
-    height: 6%;
-    width: 11.3%;
-    top: 17.2%;
-    right: 29.4%;
-}
-
-#aula2-15 {
-    height: 6%;
-    width: 11.2%;
-    top: 17.2%;
-    right: 18.0%;
-}
-
-#aula2-2 {
-    height: 6.2%;
-    width: 11.5%;
-    top: 26.2%;
-    left: 24.8%;
-}
-
-#aula2-4 {
-    height: 6.2%;
-    width: 11.5%;
-    top: 26.2%;
-    left: 13.0%;
-}
-
-#aula2-6 {
-    height: 6.2%;
-    width: 11.5%;
-    top: 26.2%;
-    left: 1.5%;
-}
-
-#aula2-8 {
-    height: 6.1%;
-    width: 11.3%;
-    top: 34.6%;
-    left: 1.5%;
-}
-
-#aula2-10 {
-    height: 6.1%;
-    width: 5.5%;
-    top: 34.6%;
-    left: 13.1%;
-}
-
-#aula2-12 {
-    height: 6.1%;
-    width: 11.3%;
-    top: 34.6%;
-    left: 18.9%
 }
 
 *{
