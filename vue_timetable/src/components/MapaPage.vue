@@ -29,9 +29,12 @@ let infoAula = ref("");
 let infoProfe = ref("");
 let infoAsignatura = ref("");
 let infoGrupo = ref("");
+let textoRotacion = ref("");
 
 //Variables privadas
 let _cursos = ref([]);
+let _rotacion = ref(false);
+let _intervaloRotacion = undefined;
 
 const onChangeDimension = () =>{
     //Obtenemos el elemento selection por su id
@@ -212,6 +215,42 @@ const obtenerInfoAula = async (aula)=>{
     }
 }
 
+const activarDesactivarRotacion = (milisegundos,elemento)=>{
+    const boton = document.getElementById(elemento);
+    if(!_rotacion.value)
+    {
+        _rotacion.value = true;
+        _intervaloRotacion = setInterval(cambioPlanta,milisegundos);
+        textoRotacion.value = "Rotacion establecida en "+(milisegundos/1000)+" segundos"
+        boton.style.backgroundColor = "rgb(130, 255, 249);";
+        boton.style.color = "rgb(255,255,255);"
+    }
+    else
+    {
+        _rotacion.value = false;
+        clearInterval(_intervaloRotacion);
+        textoRotacion.value = "";
+        boton.style.backgroundColor = "background-color: rgb(238, 243, 242);";
+    }
+}
+
+
+const cambioPlanta = ()=>{
+
+    if(plantaBaja.value)
+    {
+        onClickSegundaPlanta();
+    }
+    else if(primeraPlanta.value)
+    {
+        onClickTerceraPlanta();
+    }
+    else if(segundaPlanta.value)
+    {
+        onClickPrimeraPlanta();
+    }
+}
+
 onMounted(async ()=>{
     root.style.setProperty('--map-width',"662px");
     root.style.setProperty('--map-height',"936px");
@@ -281,16 +320,18 @@ watch(recarga,(nuevo,viejo) =>{
                         <button id="boton-planta-segunda" v-on:click="onClickTerceraPlanta()">Planta<br/>segunda</button>
                     </div>
                     <!-- este div solo sirve para reflejar al usuario el estado de la rotación, por defecto desactivada-->
-                    <div id="indicador">Rotacion: Desactivada</div>
+                    <div id="indicador" v-if="!_rotacion">Rotacion: Desactivada</div>
+                    <div id="indicador" v-else>Rotacion: Activada</div>
 
                     <!-- Botones de rotacion automatica -->
-                    <button id="boton-autorotacion">03s</button>
-                    <button id="rotacion-5">05s</button>
-                    <button id="rotacion-10">10s</button>
-                    <button id="rotacion-15">15s</button>
-                    <button id="rotacion-20">20s</button>
-                    <button id="rotacion-30">30s</button>
+                    <button id="boton-autorotacion" v-on:click="activarDesactivarRotacion(3000,'boton-autorotacion')">03s</button>
+                    <button id="rotacion-5" v-on:click="activarDesactivarRotacion(5000,'rotacion-5')">05s</button>
+                    <button id="rotacion-10" v-on:click="activarDesactivarRotacion(10000,'rotacion-10')">10s</button>
+                    <button id="rotacion-15" v-on:click="activarDesactivarRotacion(15000,'rotacion-15')">15s</button>
+                    <button id="rotacion-20" v-on:click="activarDesactivarRotacion(20000,'rotacion-20')">20s</button>
+                    <button id="rotacion-30" v-on:click="activarDesactivarRotacion(30000,'rotacion-30')">30s</button>
                 </div>
+                <h4>{{textoRotacion}}</h4>
             </div>
 
             <!-- INICIO  Menu desplegable para seleccion de tamaño caja mapa  -->
