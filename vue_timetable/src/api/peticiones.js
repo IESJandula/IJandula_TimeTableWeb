@@ -1,3 +1,5 @@
+//Añadir fichero de carga que contenga el basepath del hosting
+
 
 /**
  * Metodo que realiza una peticion http al servidor TimeTable para recoger 
@@ -7,7 +9,7 @@
 export const getTeachers = async () =>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/teachers";
+        let url = "http://5.250.184.231:8088/horarios/get/teachers";
         const response = await fetch(url);
         if(!response.ok)
         {
@@ -29,7 +31,7 @@ export const getTeachers = async () =>{
 export const getHours = async ()=>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/hours";
+        let url = "http://5.250.184.231:8088/horarios/get/hours";
         const response = await fetch(url);
         if(!response.ok)
         {
@@ -50,7 +52,7 @@ export const getHours = async ()=>{
 export const getCourses = async ()=>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/coursenames";
+        let url = "http://5.250.184.231:8088/horarios/get/coursenames";
         const response = await fetch(url);
         if(!response.ok)
         {
@@ -67,7 +69,7 @@ export const getCourses = async ()=>{
 export const getStudentCourses = async ()=>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/students-course";
+        let url = "http://5.250.184.231:8088/horarios/get/students-course";
         const response = await fetch(url);
         if(!response.ok)
         {
@@ -88,7 +90,7 @@ export const getStudentCourses = async ()=>{
 export const getTramos = async ()=>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/tramos";
+        let url = "http://5.250.184.231:8088/horarios/get/tramos";
         const response = await fetch(url);
         if(!response.ok)
         {
@@ -116,7 +118,7 @@ export const getTeacherClassroom = async (nombre,apellido)=>{
             lastname: apellido
         };
 
-        let url = "http://localhost:8088/horarios/teacher/get/classroom?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/teacher/get/classroom?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url);
 
@@ -141,7 +143,7 @@ export const getTeacherClassroomHora = async (nombre,apellido,tramo)=>{
             lastname: apellido
         };
 
-        let url = "http://localhost:8088/horarios/teacher/get/classroom/tramo?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/teacher/get/classroom/tramo?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url,{
             method: "POST",
@@ -171,7 +173,7 @@ export const getClassroomCourse = async (curso)=>{
             courseName: curso
         }
 
-        let url = "http://localhost:8088/horarios/get/teachersubject?"+new URLSearchParams(param).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/teachersubject?"+new URLSearchParams(param).toString();
 
         const response = await  fetch(url);
 
@@ -191,7 +193,7 @@ export const getClassroomCourse = async (curso)=>{
 export const getPoints = async ()=>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/points";
+        let url = "http://5.250.184.231:8088/horarios/get/points";
 
         const response = await fetch(url);
 
@@ -211,7 +213,7 @@ export const getPoints = async ()=>{
 export const getSortStudents = async () =>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/sortstudents"
+        let url = "http://5.250.184.231:8088/horarios/get/sortstudents"
 
         const response = await fetch(url);
 
@@ -235,7 +237,7 @@ export const getSortStudentsCourse = async (curso)=>{
             course: curso
         }
 
-        let url = "http://localhost:8088/horarios/get/course/sort/students?"+new URLSearchParams(param).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/course/sort/students?"+new URLSearchParams(param).toString();
         
         const response = await fetch(url);
 
@@ -259,7 +261,7 @@ export const getSortStudentsCourse = async (curso)=>{
 export const cargarXml = async (file) =>{
     try
     {
-        let url = "http://localhost:8088/horarios/send/xml";
+        let url = "http://5.250.184.231:8088/horarios/send/xml";
 
         const response = await fetch(url,{
             method:"POST",
@@ -288,7 +290,7 @@ export const cargarXml = async (file) =>{
 export const cargarCsvAlumnos = async (file) =>{
     try
     {
-        let url = "http://localhost:8088/horarios/send/csv-alumnos";
+        let url = "http://5.250.184.231:8088/horarios/send/csv-alumnos";
 
         const response = await fetch(url,{
             method:"POST",
@@ -316,7 +318,7 @@ export const cargarCsvAlumnos = async (file) =>{
 export const cargarCsvPlanos = async(file)=>{
     try
     {
-        let url = "http://localhost:8088/horarios/send/csv-planos";
+        let url = "http://5.250.184.231:8088/horarios/send/csv-planos";
 
         const response = await fetch(url,{
             method:"POST",
@@ -351,7 +353,7 @@ export const descargarPdfProfesores = async (nombre,apellido) =>{
             lastname: apellido
         };
 
-        let url = "http://localhost:8088/horarios/get/horario/teacher/pdf?"+ new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/horario/teacher/pdf?"+ new URLSearchParams(params).toString();
 
         const response = await fetch(url);
 
@@ -377,7 +379,7 @@ export const descargarPdfProfesores = async (nombre,apellido) =>{
 export const descargarPdfTodosProfesores = async () =>{
     try
     {
-        let url = "http://localhost:8088/horarios/get/teachers/pdf";
+        let url = "http://5.250.184.231:8088/horarios/get/teachers/pdf";
 
         const response = await fetch(url);
 
@@ -406,7 +408,7 @@ export const descargarPdfGrupo = async (grupo) => {
             group:grupo
         };
 
-        let url = "http://localhost:8088/horarios/get/grupo/pdf?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/grupo/pdf?"+new URLSearchParams(params).toString();
         
         const response = await fetch(url);
 
@@ -430,7 +432,7 @@ export const descargarPdfGrupo = async (grupo) => {
 export const descargarPdfGrupos = async () => {
     try
     {
-        let url = "http://localhost:8088/horarios/get/grupos/pdf";
+        let url = "http://5.250.184.231:8088/horarios/get/grupos/pdf";
 
         const response = await fetch(url);
 
@@ -456,7 +458,7 @@ export const registrarIda = async (nombre,apellidos,curso) =>{
             course:curso
         };
 
-        let url = "http://localhost:8088/horarios/student/visita/bathroom?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/student/visita/bathroom?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url,{
             method:"POST"
@@ -486,7 +488,7 @@ export const registrarVuelta = async(nombre,apellidos,curso) =>{
             course:curso
         };
 
-        let url = "http://localhost:8088/horarios/student/regreso/bathroom?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/student/regreso/bathroom?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url,{
             method:"POST"
@@ -519,7 +521,7 @@ export const obtenerVisitasAlumno = async(nombre,apellidos,curso,fechaInicio,fec
             fechaFin:fechaFin
         }
 
-        let url = "http://localhost:8088/horarios/get/veces/visitado/studentFechas?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/veces/visitado/studentFechas?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url);
 
@@ -544,7 +546,7 @@ export const obtenerVisitasAlumnos = async(fechaInicio,fechaFin) =>{
             fechaFin:fechaFin
         }
 
-        let url = "http://localhost:8088/horarios/get/students/visitas/bathroom?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/students/visitas/bathroom?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url);
 
@@ -568,7 +570,7 @@ export const obtenerAulasPorPlanta = async(planta) =>{
             planta:planta
         }
 
-        let url = "http://localhost:8088/horarios/get/classroom-planos?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/classroom-planos?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url);
 
@@ -600,7 +602,7 @@ export const obtenerAulasPorPlanta = async(planta) =>{
 export const checkServerData = async()=>{
     try
     {
-        let url = "http://localhost:8088/horarios/check-data"; 
+        let url = "http://5.250.184.231:8088/horarios/check-data"; 
 
         const response = await fetch(url);
 
@@ -631,7 +633,7 @@ export const checkServerData = async()=>{
 export const sendErrorInfo = async(objectError)=>{
     try
     {
-        let url = "http://localhost:8088/horarios/send/error-info";
+        let url = "http://5.250.184.231:8088/horarios/send/error-info";
 
         const response = await fetch(url,{
             method:"POST",
@@ -663,7 +665,7 @@ export const getInfoError = async()=>{
     let isDone = false;
     try
     {
-        let url = "http://localhost:8088/horarios/get/error-info";
+        let url = "http://5.250.184.231:8088/horarios/get/error-info";
 
         response = await fetch(url);
 
@@ -724,7 +726,7 @@ export const getAulaNow = async(numIntAu,abreviatura,nombre) =>{
             nombre,nombre
         };
 
-        let url = "http://localhost:8088/horarios/get/aula-now?"+new URLSearchParams(params).toString();
+        let url = "http://5.250.184.231:8088/horarios/get/aula-now?"+new URLSearchParams(params).toString();
 
         const response = await fetch(url);
 
