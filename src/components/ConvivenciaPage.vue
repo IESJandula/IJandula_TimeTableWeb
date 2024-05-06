@@ -149,7 +149,6 @@ const checkStatus = async() =>{
         content.value = "";
         errorAlumnos.value = false;
         getCourse();
-        cargarAlumnos();
         recarga.value = false;
     }
 }
