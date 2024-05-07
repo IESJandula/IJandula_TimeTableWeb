@@ -199,7 +199,7 @@ watch(recarga,(nuevo,viejo)=>{
     <div class="opcion" v-show="recarga" v-if="!errorAlumnos"> 
 
         <div>
-            <h2>Docente actualmente de guardia: <span id="docenteguardia"><!--Aqui se integra el maestro de guardia en ese momento --> Valor automatico. </span></h2>
+            <h2>Docente actualmente de guardia: <span id="docenteguardia"><!--Aqui se integra el maestro de guardia en ese momento --> No disponible en este momento </span></h2>
         </div>
 
         <div class="contenido">
