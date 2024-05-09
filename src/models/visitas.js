@@ -24,3 +24,15 @@ export class RegistroVisita{
         this.dia = dia;
     }
 }
+
+export class AlumnoBathroom{
+
+    constructor(nombre,apellidos,curso,hora,dia)
+    {
+            this.nombre = nombre
+            this.apellidos = apellidos
+            this.curso = curso
+            this.hora = hora
+            this.dia = dia
+    }
+}

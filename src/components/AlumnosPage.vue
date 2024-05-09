@@ -3,7 +3,7 @@ import { ref, watch,onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getStudentCourses,getSortStudentsCourse,getSortStudents,registrarIda,registrarVuelta,obtenerVisitasAlumno,obtenerVisitasAlumnos,sendErrorInfo } from '@/api/peticiones';
 import { Alumno } from '@/models/alumnos';
-import { RegistroVisita } from '@/models/visitas';
+import { RegistroVisita,AlumnoBathroom } from '@/models/visitas';
 import { separadorNombreCurso,compareDate,convertirFecha,checkData } from "@/js/utils";
 //Instancia del router
 const router = useRouter();
@@ -26,6 +26,8 @@ let infoEstadisticas = ref("");
 let estiloEstadisticas = ref("");
 let infoListado = ref("");
 let mostrarListado = ref(false);
+let infoTutor = ref("");
+let estiloTutor = ref("");
 let errorAlumnos = ref(false);
 let header = ref("");
 let content = ref("");
@@ -41,6 +43,7 @@ let _mostrarIdaVueltaAlumnos = ref(false);
 let _mostrarStatsAlumnos = ref(false);
 let _visitasAlumno = ref([]); 
 let _listadoAlumno = ref([]);
+
 //Metodos
 /**
  * Metodo que recoge los cursos de los alumnos y manda una señal para recargar la pagina
@@ -313,7 +316,7 @@ const obtenerVisitaAlumno = async(nombre,apellidos,curso,fechaInicio,fechaFin) =
 
         for(let i=0;i<data.length;i++)
         {
-            let visita = new RegistroVisita(data[i].hora,data[i].dia);
+            let visita = new RegistroVisita(data[i].horas,data[i].dia);
             arrayVisitas.push(visita);
         }
         _visitasAlumno = ref(arrayVisitas);
@@ -338,11 +341,12 @@ const obtenerVisitaAlumnos = async(fechaInicio,fechaFin) =>{
 
         for(let i=0;i<data.length;i++)
         {
-            let alumno = new Alumno(data[i].alumno.name,data[i].alumno.lastName,data[i].alumno.course,data[i].alumno.numBathroom);
+            let alumno = new AlumnoBathroom(data[i].alumno.nombre,data[i].alumno.apellidos,data[i].curso,data[i].horas,data[i].dia);
             arrayListado.push(alumno);
         }
 
         _listadoAlumno = ref(arrayListado);
+
 
         estiloIdaVuelta.value = "color: forestgreen;"
         infoListado.value = "Alumnos encontrados";
@@ -460,6 +464,11 @@ const checkStatus = async() =>{
     }
 }
 
+const onClickTutor = () =>{
+    infoTutor.value = "No disponible en este momento";
+    estiloTutor = "color: darkgoldenrod;";
+}
+
 /**
  * Metodo que se encarga de recoger los datos al entrar en la pagina
  */
@@ -565,17 +574,19 @@ watch(alumnos,(nuevo,viejo) => {
         
                         <tbody>
                             <tr>
-                                <td>Vicente Serrano</td>
-                                <td>*****@g.educaand.es</td>
+                                <td>?</td>
+                                <td>?</td>
                                 <td>
                                     <span class="action-btn">
-                                        <a>Info Tutor</a>
-                                        <a>Info Tutor Legal</a>
+                                        <a href="#" v-on:click="onClickTutor()">Info Tutor</a>
+                                        <a href="#" v-on:click="onClickTutor()">Info Tutor Legal</a>
                                     </span>
                                 </td>
+                                
                             </tr>
                         </tbody>
                     </table>
+                    <h1 v-bind:style="estiloTutor">{{ infoTutor }}</h1>
         
                 </div>
             </div>
@@ -748,12 +759,14 @@ watch(alumnos,(nuevo,viejo) => {
                             <th>Nombre</th>
                             <th>Apellidos</th>
                             <th>Curso</th>
-                            <th>Veces idas al baño</th>
+                            <th>Día</th>
+                            <th>Horas</th>
                         </tr>
                     </thead>
 
                     <tbody v-if="!mostrarListado">
                         <tr>
+                            <td>?</td>
                             <td>?</td>
                             <td>?</td>
                             <td>?</td>
@@ -765,7 +778,8 @@ watch(alumnos,(nuevo,viejo) => {
                             <td>{{ i.nombre }}</td>
                             <td>{{ i.apellidos }}</td>
                             <td>{{ i.curso }}</td>
-                            <td>{{ i.numBathroom }}</td>
+                            <td>{{ i.dia }}</td>
+                            <td>{{ i.hora }}</td>
                         </tr>
                     </tbody>
                 </table>

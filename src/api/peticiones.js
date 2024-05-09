@@ -1,6 +1,8 @@
 //!Añadir fichero de carga que contenga el basepath del hosting
-//Base de datos
-//?Tildes en alumnos
+//!Base de datos
+//Crear endpoints para las operaciones CRUD de la base de datos
+//Implementar las operaciones CRUD del back al front
+//!Tildes en alumnos
 //!Correccion de errores
 //Añadir a la documentacion los comandos de nvm (versionado de node)
 //Crear los roles
