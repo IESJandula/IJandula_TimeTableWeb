@@ -448,7 +448,7 @@ watch(recarga,(nuevo,viejo)=>{
             </div>
             <br><hr><br>
             <div id="docente-guardia"> 
-                <iframe id="hoja-calculo" src="https://onedrive.live.com/embed?resid=370B3DAE70E66DD4%212895&authkey=!AEWXzF8NKl6X2lo&em=2"></iframe>
+                <iframe id="hoja-calculo" src="https://docs.google.com/spreadsheets/d/16w92lExDZ9_-X9Bx3g6k5kdb5WjTtZNckmSsqw4Yx9M/edit#gid=2027701287"></iframe>
             </div>
         </main>
         <main v-else>
