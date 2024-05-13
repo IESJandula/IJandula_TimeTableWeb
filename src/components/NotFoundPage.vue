@@ -41,7 +41,7 @@ const checkStatus = async()=>{
     }
     else
     {
-        if(data.headerInfo=="Datos no cargados" || data.headerInfo=="Servidor no lanzado")
+        if(data.headerInfo=="Servidor no lanzado")
         {
             setError();
         }
