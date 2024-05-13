@@ -17,8 +17,12 @@ let recarga = ref(true);
 let cursos = ref([]);
 let alumnos = ref([]);
 let tipoAlumno = ref("");
+let tutor = ref(["?","?","?"]);
 let idaVuelta = ref(["?","?","?"]);
 let stats = ref(["?","?","?","?"]);
+let mostrarTutor = ref(false);
+let infoTutor = ref("");
+let estiloTutor = ref("");
 let infoIdaVuelta = ref("");
 let estiloIdaVuelta = ref("");
 let mostrarVisitas = ref(false);
@@ -26,8 +30,6 @@ let infoEstadisticas = ref("");
 let estiloEstadisticas = ref("");
 let infoListado = ref("");
 let mostrarListado = ref(false);
-let infoTutor = ref("");
-let estiloTutor = ref("");
 let errorAlumnos = ref(false);
 let header = ref("");
 let content = ref("");
@@ -75,7 +77,9 @@ const cargarAlumnos = async()=>{
 
     for(let i=0;i<data.length;i++)
     {
-        let alumno = new Alumno(data[i].name,data[i].lastName,data[i].course,data[i].numBathroom);
+        let alumno = new Alumno(data[i].name,data[i].lastName,data[i].course,data[i].matriculationYear,data[i].firstTutorLastName,data[i].secondTutorLastName,
+		        data[i].tutorName,data[i].tutorPhone,data[i].tutorEmail
+		        );
         arrayAlumno.push(alumno);
     }
 
@@ -206,8 +210,8 @@ const onChangeAlumnosIdaVuelta = () =>{
     else
     {
         let alumnoObject = separadorNombreCurso(alumno,curso,_alumnos.value);
-        idaVuelta = ref([alumnoObject.nombre,alumnoObject.apellidos,alumnoObject.curso]);
-        infoIdaVuelta.value = "   ";
+        idaVuelta = ref([alumnoObject.name,alumnoObject.lastName,alumnoObject.course]);
+        infoIdaVuelta.value = "";
         recarga.value = false;
     }
 }
@@ -235,7 +239,7 @@ const onChangeAlumnosStats = () =>{
     else
     {
         let alumnoObject = separadorNombreCurso(alumno,curso,_alumnos.value);
-        stats = ref([alumnoObject.nombre,alumnoObject.apellidos,alumnoObject.curso,""+alumnoObject.numBathroom]);
+        stats = ref([alumnoObject.name,alumnoObject.lastName,alumnoObject.course,"?"]);
         recarga.value = false;
     }
 }
@@ -341,7 +345,9 @@ const obtenerVisitaAlumnos = async(fechaInicio,fechaFin) =>{
 
         for(let i=0;i<data.length;i++)
         {
-            let alumno = new AlumnoBathroom(data[i].alumno.nombre,data[i].alumno.apellidos,data[i].curso,data[i].horas,data[i].dia);
+            let alumno = new Alumno(data[i].name,data[i].lastName,data[i].course,data[i].course,data[i].matriculationYear,data[i].firstTutorLastName,data[i].secondTutorLastName,
+		        data[i].tutorName,data[i].tutorPhone,data[i].tutorEmail
+		        );
             arrayListado.push(alumno);
         }
 
@@ -459,7 +465,6 @@ const checkStatus = async() =>{
         content.value = "";
         errorAlumnos.value = false;
         getCourse();
-        cargarAlumnos();
         recarga.value = false;
     }
 }
@@ -467,6 +472,67 @@ const checkStatus = async() =>{
 const onClickTutor = () =>{
     infoTutor.value = "No disponible en este momento";
     estiloTutor = "color: darkgoldenrod;";
+}
+
+const onClickTutorLegal = () =>{
+    //Obtenemos el id del selector de alumnos
+    let tutorAlumno = document.getElementById("selector-alumno");
+
+    //Obtenemos su valor en bruto
+    let alumno = tutorAlumno.options[tutorAlumno.selectedIndex].text;
+
+    //Obtenemos el id del selector de cursos
+    const cursoSelection = document.getElementById("selector-curso");
+    //Obtenemos su valor en bruto
+    let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
+
+    if(alumno=="Nombre y apellidos")
+    {
+        tutor = ref(["?","?","?"]);
+        recarga.value = false;
+        mostrarTutor.value = false;
+    }
+    else
+    {
+        let alumnoObject = separadorNombreCurso(alumno,curso,_alumnos.value);
+
+        if(alumnoObject.tutorName==null)
+        {
+            alumnoObject.tutorName = "";
+        }
+
+        if(alumnoObject.firstTutorLastName==null)
+        {
+            alumnoObject.firstTutorLastName = "";
+        }
+
+        if(alumnoObject.secondTutorLastName==null)
+        {
+            alumnoObject.secondTutorLastName = "";
+        }
+
+        let nombreTutor = alumnoObject.tutorName+" "+alumnoObject.firstTutorLastName+" "+alumnoObject.secondTutorLastName;
+        
+        if(nombreTutor.trim()=="")
+        {
+            nombreTutor = "sin datos";
+        }
+
+        if(alumnoObject.tutorEmail==null)
+        {
+            alumnoObject.tutorEmail = "sin datos";
+        }
+        
+        if(alumnoObject.tutorPhone==null)
+        {
+            alumnoObject.tutorPhone = "sin datos";
+        }
+
+        tutor = ref([nombreTutor,alumnoObject.tutorEmail,alumnoObject.tutorPhone]);
+        recarga.value = false;
+        mostrarTutor.value = true;
+    }
+
 }
 
 /**
@@ -568,21 +634,34 @@ watch(alumnos,(nuevo,viejo) => {
                             <tr>
                                 <th>Nombre</th>
                                 <th>Correo</th>
+                                <th>Teléfono</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
         
                         <tbody>
-                            <tr>
+                            <tr v-if="!mostrarTutor">
+                                
+                                <td>?</td>
                                 <td>?</td>
                                 <td>?</td>
                                 <td>
                                     <span class="action-btn">
                                         <a href="#" v-on:click="onClickTutor()">Info Tutor</a>
-                                        <a href="#" v-on:click="onClickTutor()">Info Tutor Legal</a>
+                                        <a href="#" v-on:click="onClickTutorLegal()">Info Tutor Legal</a>
                                     </span>
                                 </td>
-                                
+                            </tr>
+                            <tr v-else>
+                                <td>{{ tutor[0] }}</td>
+                                <td>{{ tutor[1] }}</td>
+                                <td>{{ tutor[2] }}</td>
+                                <td>
+                                    <span class="action-btn">
+                                        <a href="#" v-on:click="onClickTutor()">Info Tutor</a>
+                                        <a href="#" v-on:click="onClickTutorLegal()">Info Tutor Legal</a>
+                                    </span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
