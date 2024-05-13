@@ -156,7 +156,10 @@ const checkStatus = async() =>{
     if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
     {
         sendErrorInfo(error);
-        router.push("/error");
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorData.value = true;
+        recarga.value = false;
     }
     else if(error.headerInfo=="Servidor no lanzado")
     {
@@ -185,6 +188,7 @@ const checkStatus = async() =>{
         errorData.value = false;
         obtenerCursos();
         recarga.value = false;
+        let array = aulas.value;
     }
 }
 

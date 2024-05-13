@@ -19,6 +19,9 @@ let cursos = ref([]);
 let recarga = ref(true);
 let enlacePdf = ref("/Horario.pdf");
 let interval = undefined;
+let errorData = ref(false);
+let header = ref("");
+let content = ref("");
 //Variables privadas
 let _profesores = ref([]);
 
@@ -178,11 +181,23 @@ const checkStatus = async() =>{
     if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
     {
         sendErrorInfo(error);
-        router.push("/error");
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorData.value = true;
+        recarga.value = false;
     }
     else if(error.headerInfo=="Servidor no lanzado")
     {
         router.push("/error");
+    }
+    else if(typeof error!="undefined")
+    {
+        header.value = "";
+        content.value = "";
+        errorData.value = false;
+        cargarProfesores();
+        cargarCursos();
+        recarga.value = false;
     }
 }
 
@@ -230,45 +245,55 @@ watch(recarga,(nuevo,viejo)=>{
             </ul>
         </div>
    </header> 
-    <div id="Horario" v-show="recarga">
-        <div id="horario-seleccionar-Profesor">
-            <label for="Profesores">Profesores</label>
-            <p></p>
-            <select name="Profesores-Horarios" id="Profesores">
-                <option selected>Selecciona un profesor</option>
-                <option v-for="i in profesores">{{ i }}</option>
-            </select>
-            <p></p>
-            <button v-on:click="onClickProfesor()">Enviar</button>
-        </div>
-        
-        <div id="horario-todos-Profesores">
-            <p>Horario de todos los Profesores</p>
-            <button id="button-Horario-Profesores" v-on:click="obtenerPdfProfesores()"> Ver </button>
-        </div>
-        
-        <div id="horario-seleccionar-grupo">
-            <label for="Grupos">Grupos</label>
-            <p></p>
-            <select name="Grupos-Horarios" id="Grupos">
-                <option selected>Seleccione un grupo </option>
-                <option v-for="i in cursos">{{ i }} </option>
-            </select>
-            <p></p>
-            <button v-on:click="onClickGrupo()">Enviar</button>
-         
-        </div>
+    <main v-if="!errorData">
+        <div id="Horario" v-show="recarga">
+            <div id="horario-seleccionar-Profesor">
+                <label for="Profesores">Profesores</label>
+                <p></p>
+                <select name="Profesores-Horarios" id="Profesores">
+                    <option selected>Selecciona un profesor</option>
+                    <option v-for="i in profesores">{{ i }}</option>
+                </select>
+                <p></p>
+                <button v-on:click="onClickProfesor()">Enviar</button>
+            </div>
+            
+            <div id="horario-todos-Profesores">
+                <p>Horario de todos los Profesores</p>
+                <button id="button-Horario-Profesores" v-on:click="obtenerPdfProfesores()"> Ver </button>
+            </div>
+            
+            <div id="horario-seleccionar-grupo">
+                <label for="Grupos">Grupos</label>
+                <p></p>
+                <select name="Grupos-Horarios" id="Grupos">
+                    <option selected>Seleccione un grupo </option>
+                    <option v-for="i in cursos">{{ i }} </option>
+                </select>
+                <p></p>
+                <button v-on:click="onClickGrupo()">Enviar</button>
+            
+            </div>
 
-        <div id="horario-todos-grupos">
-            <p>Horario de todos los Grupos</p>
-            <button id="button-Horario-Grupo" v-on:click="obtenerPdfGrupos()"> Ver </button>
-        </div>
+            <div id="horario-todos-grupos">
+                <p>Horario de todos los Grupos</p>
+                <button id="button-Horario-Grupo" v-on:click="obtenerPdfGrupos()"> Ver </button>
+            </div>
 
-    </div>   
+        </div>   
     <div id="horarios-container" v-show="recarga">
         <embed type="text/html" v-bind:src="enlacePdf"  width="85%" height="900px">
     </div>
-   
+    </main>
+    <main v-else>
+        <div v-show="recarga" id="errorStudent">
+            <header id="errorHeader">
+                <h1>{{ header }}</h1>
+            </header>
+            <h1>{{ content }}</h1>
+        </div>
+    </main>
+ 
 </template>
 
 <style scoped>
@@ -435,4 +460,25 @@ a, li{
     cursor: pointer;
 }
 
+#errorHeader{
+    width: 80%;
+    font-size: 160%;
+    margin-bottom: 10%;
+    margin-left: 10%;
+    background-color: white;
+}
+
+.errorContent{
+    color: black;
+    font-size: 160%;  
+}
+
+
+#errorStudent
+{
+    width: 40%;
+    margin-top: 8%;
+    margin-left: 30%;
+    text-align: center;
+}
 </style>

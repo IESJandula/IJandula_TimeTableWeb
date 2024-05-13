@@ -25,6 +25,9 @@ let noAula = ref("");
 let info = ref(false);
 let recarga = ref(true);
 let interval = undefined;
+let errorData = ref(false);
+let header = ref("");
+let content = ref("");
 
 //Variables privadas
 let _profesores = ref([]);
@@ -322,11 +325,25 @@ const checkStatus = async() =>{
     if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
     {
         sendErrorInfo(error);
-        router.push("/error");
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorData.value = true;
+        recarga.value = false;
     }
     else if(error.headerInfo=="Servidor no lanzado")
     {
         router.push("/error");
+    }
+    else if(typeof error!="undefined")
+    {
+        header.value = "";
+        content.value = "";
+        errorData.value = false;
+        getTeacher();
+        getCourse();
+        getHour();
+        getTramo();
+        recarga.value = false;
     }
 }
 
@@ -380,7 +397,7 @@ watch(recarga,(nuevo,viejo)=>{
             </div>
        </header> 
         <br>
-        <main v-show="recarga">
+        <main v-show="recarga" v-if="!errorData">
             <div id="docente" >
                 <div  id="docente-profesor">
                 <label for="profesor">Profesor: </label>
@@ -402,36 +419,44 @@ watch(recarga,(nuevo,viejo)=>{
                 <button class="button-docente" v-on:click="mostrarDocente">Buscar por docente</button>
             </div>
 
-        <div id="docente-curso">
-            <label for="curso">Curso: </label>
-            <select name="curso" id="curso">
-                <option value="default">Selecciona un curso</option>
-                <option v-for="i in cursos" value="{{ i }}">{{ i }}</option>
-            </select>
-            <br><br>
-            <button class="button-docente" v-on:click="mostrarDocenteCurso">Buscar por curso</button> 
-        </div>
-        <div id="info-aula" v-show="info">
-            <div v-if="noAula==''">
-                <br>
-                <h3>{{ infoProfe }}</h3>
-                <br>
-                <h3>{{ infoNumAula }}</h3>
-                <br>
-                <h3>{{ infoNombreAula }}</h3>
-                <br>
+            <div id="docente-curso">
+                <label for="curso">Curso: </label>
+                <select name="curso" id="curso">
+                    <option value="default">Selecciona un curso</option>
+                    <option v-for="i in cursos" value="{{ i }}">{{ i }}</option>
+                </select>
+                <br><br>
+                <button class="button-docente" v-on:click="mostrarDocenteCurso">Buscar por curso</button> 
             </div>
-            <div v-else>
-                <h3>{{ infoProfe }}</h3>
-                <br>
-                <h3 style="text-align: center;">{{ noAula }}</h3>
-                <br>
+            <div id="info-aula" v-show="info">
+                <div v-if="noAula==''">
+                    <br>
+                    <h3>{{ infoProfe }}</h3>
+                    <br>
+                    <h3>{{ infoNumAula }}</h3>
+                    <br>
+                    <h3>{{ infoNombreAula }}</h3>
+                    <br>
+                </div>
+                <div v-else>
+                    <h3>{{ infoProfe }}</h3>
+                    <br>
+                    <h3 style="text-align: center;">{{ noAula }}</h3>
+                    <br>
+                </div>
+                </div>
             </div>
-        </div>
-    </div>
             <br><hr><br>
             <div id="docente-guardia"> 
                 <iframe id="hoja-calculo" src="https://onedrive.live.com/embed?resid=370B3DAE70E66DD4%212895&authkey=!AEWXzF8NKl6X2lo&em=2"></iframe>
+            </div>
+        </main>
+        <main v-else>
+            <div v-show="recarga" id="errorStudent">
+                <header id="errorHeader">
+                    <h1>{{ header }}</h1>
+                </header>
+                <h1>{{ content }}</h1>
             </div>
         </main>
 </template>
@@ -610,6 +635,28 @@ a, li{
 
 .botonMenu{
     cursor: pointer;
+}
+
+#errorHeader{
+    width: 80%;
+    font-size: 160%;
+    margin-bottom: 10%;
+    margin-left: 10%;
+    background-color: rgb(241, 241, 224);
+}
+
+.errorContent{
+    color: black;
+    font-size: 160%;  
+}
+
+
+#errorStudent
+{
+    width: 40%;
+    margin-top: 8%;
+    margin-left: 30%;
+    text-align: center;
 }
 
 </style>

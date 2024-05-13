@@ -2,6 +2,7 @@ import { Profesor } from "@/models/profesores";
 import { Tramo } from "@/models/tramos";
 import { Alumno } from "@/models/alumnos";
 import { checkServerData } from "@/api/peticiones";
+import { Puntos } from "@/models/puntos";
 
 /**
  * Metodo que compara el nombre seleccionado con los datos cargadados
@@ -166,16 +167,18 @@ export const checkHoraDia = () =>
  * @returns alumno encontrado
  */
 export const separadorNombreCurso = (alumno,curso,alumnos) =>{
-    let alumnoFound =  new Alumno("?","?","?",0);
+    let alumnoFound =  new Alumno("?","?","?","","","","","","");
 
     for(let i = 0;i<alumnos.length;i++)
     {
         let item = alumnos[i];
-        let itemValue = item.nombre+" "+item.apellidos;
+        let itemValue = item.name+" "+item.lastName;
 
         if(itemValue==alumno)
         {       
-            alumnoFound = new Alumno(item.nombre,item.apellidos,curso,item.numBathroom); 
+            alumnoFound = new Alumno(item.name,item.lastName,item.course,item.matriculationYear,item.firstTutorLastName,item.secondTutorLastName,
+		        item.tutorName,item.tutorPhone,item.tutorEmail
+		        );
         }
     }
 
@@ -252,7 +255,7 @@ export const checkData = async()=>{
         {
             return {
                 headerInfo:"Datos no cargados",
-                infoError:"El administrador aun no ha cargado los datos en el servidor cuando los cargue se le redigira al apartado de planos gracias por la espera",
+                infoError:"El administrador aun no ha cargado los datos en el servidor cuando los cargue se recargara la pagina automaticamente",
                 wait:true
             };
         }
@@ -277,4 +280,25 @@ export const checkData = async()=>{
     {
         return "ok";
     }
+}
+
+/**
+ * Metodo que busca y devuelve la sancion concreta
+ * a aplicar sobre el alumno
+ * @param {string} valor 
+ * @param {Puntos[]} puntos 
+ * @returns sancion encontrada o sancion por defecto
+ */
+export const searchSancion  = (valor,puntos) =>{
+    let sancion = new Puntos(0,"?");
+
+    for(let i = 0;i<puntos.length;i++)
+    {
+        if(valor.search(puntos[i].description)>0)
+        {
+            sancion = puntos[i];
+        }
+    }
+
+    return sancion;
 }
