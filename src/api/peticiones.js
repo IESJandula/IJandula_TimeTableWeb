@@ -3,13 +3,15 @@
 //!Crear endpoints para las operaciones CRUD de la base de datos servicio
 //!Implementar las operaciones CRUD del back al front servicio
 //!Crear endpoints para las operaciones CRUD de la base de datos convivencia
-//Implementar las operaciones CRUD del back al front servicio convivencia
+//!Implementar las operaciones CRUD del back al front servicio convivencia
 //!Tildes en alumnos
 //!Correccion de errores
-//Pagina de datos no cargados en la web principal en vez de en su pagina propia
-//Configuracion de administrador en alumnos
+//!Pagina de datos no cargados en la web principal en vez de en su pagina propia
+//Añadir filtro de vuelta en visitas servicio
 //Añadir a la documentacion los comandos de nvm (versionado de node)
-//Crear los roles
+//Alumnos planos
+//Spring security 
+//Parte de tarde
 //Pendiente paco: preguntar encarni xml vs csv nombre de los cursos, profesores en convivencia, añadir año academico, datos tutor legal y tutor academico
 
 import { Alumno } from "@/models/alumnos";
