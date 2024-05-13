@@ -1,7 +1,8 @@
 <script setup>
 import { useRouter } from 'vue-router';
-import { getStudentCourses,getPoints,getSortStudentsCourse,sendErrorInfo } from '@/api/peticiones';
-import { checkData } from '@/js/utils';
+import { getStudentCourses,getPoints,getSortStudentsCourse,ponerSancion,sendErrorInfo } from '@/api/peticiones';
+import { checkData,separadorNombreCurso,searchSancion } from '@/js/utils';
+import { Alumno } from '@/models/alumnos';
 import { ref,onMounted, watch,onUnmounted } from 'vue';
 import { Puntos } from '../models/puntos.js'
 //Instancia del router
@@ -17,6 +18,8 @@ let cursos = ref([]);
 let alumnos = ref([]);
 let puntos = ref([]);
 let recarga = ref(true);
+let textoSancion = ref("");
+let estiloSancion = ref("");
 let mostrarAlumnos = ref(false);
 let errorAlumnos = ref(false);
 let header = ref("");
@@ -24,6 +27,7 @@ let content = ref("");
 let interval = undefined;
 //Variables privadas
 let _puntos = ref([]);
+let _alumnos = ref([]);
 
 //Metodos
 
@@ -88,14 +92,19 @@ const cargarAlumnos = async(curso)=>{
     const data = await getSortStudentsCourse(curso);
     //Array de alumnos en formato string 
     let arrayAlumnos = [];
+    let array = [];
     //Iterador de los datos que guarda los alumnos
     for(let i = 0;i<data.length;i++)
     {
-        let nombre = data[i].name+" "+data[i].lastName;
-        arrayAlumnos.push(nombre);
+        let alumno = new Alumno(data[i].name,data[i].lastName,data[i].course,data[i].matriculationYear,data[i].firstTutorLastName,data[i].secondTutorLastName,
+		        data[i].tutorName,data[i].tutorPhone,data[i].tutorEmail
+		        );
+        array.push(alumno);
+        arrayAlumnos.push(alumno.name+" "+alumno.lastName);
     }
 
     alumnos = ref(arrayAlumnos);
+    _alumnos = ref(array);
     //Llamada a la recarga de la pagina
     recarga.value = false;
 }
@@ -124,12 +133,68 @@ const onChangedCurso = ()=>{
     }
 }
 
+const enviarSancion = async ()=>{
+    //Obtenemos el id del selector de alumnos
+    const alumnoSelection = document.getElementById("alumnos");
+
+    //Obtenemos su valor en bruto
+    let alumno = alumnoSelection.options[alumnoSelection.selectedIndex].text;
+
+    //Obtenemos el id del selector de cursos
+    const cursoSelection = document.getElementById("cursos");
+    
+    //Obtenemos su valor en bruto
+    let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
+
+    //Obtenemos el id del selector de puntos
+    const puntosSelection = document.getElementById("puntos");
+    
+    //Obtenemos su valor en bruto
+    let puntos = puntosSelection.options[puntosSelection.selectedIndex].text;
+
+    if(alumno=="Selecciona un curso")
+    {
+        textoSancion = "No se ha seleccionado ningun alumno";
+        estiloSancion.value = "color: darkgoldenrod;";
+        recarga.value = false;
+    }
+    else
+    {
+        let alumnoObject = separadorNombreCurso(alumno,curso,_alumnos.value);
+        let pointObject = searchSancion(puntos,_puntos.value);
+        const data =  await ponerSancion(alumnoObject,pointObject);
+
+        if(data)
+        {
+            textoSancion = pointObject.points>0 ? "Recompensa impuesta sobre " : "Sancion impuesta sobre ";
+            textoSancion += alumnoObject.name+" "+alumnoObject.lastName+", se revisara pronto"; 
+            estiloSancion.value = "color: forestgreen;";
+            recarga.value = false;
+        }
+        else
+        {
+            textoSancion = pointObject.points>0 ? "Error al mandar la recompensa" : "Error al mandar la sancion";
+            estiloSancion.value = "color: darkred;";
+            recarga.value = false;
+        }
+    }
+
+
+
+
+    
+}
+
 const checkStatus = async() =>{
     let error = await checkData();
     if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
     {
+        textoSancion = "";
         sendErrorInfo(error);
-        router.push("/error");
+        header.value = error.headerInfo;
+        content.value = error.infoError;
+        errorAlumnos.value = true;
+        recarga.value = false;
     }
     else if(error.headerInfo=="Servidor no lanzado")
     {
@@ -137,6 +202,7 @@ const checkStatus = async() =>{
     }
     else if(error.headerInfo=="Datos de estudiantes no cargados")
     {
+        textoSancion = "";
         sendErrorInfo(error);
         header.value = error.headerInfo;
         content.value = error.infoError;
@@ -145,6 +211,7 @@ const checkStatus = async() =>{
     }
     else if(typeof error!="undefined")
     {
+        textoSancion = "";
         header.value = "";
         content.value = "";
         errorAlumnos.value = false;
@@ -212,23 +279,21 @@ watch(recarga,(nuevo,viejo)=>{
             </div>
     
             <div class="Alumnos"><!--Boton donde seleccionar el alumno, dependiendo del curso seleccionado -->
-                <select class="form-select" aria-label="Default select example">
+                <select class="form-select" aria-label="Default select example" id="alumnos">
                     <option v-show="!mostrarAlumnos" selected>Selecciona un curso</option>
                     <option v-show="mostrarAlumnos" v-for="i in alumnos">{{ i }}</option>
                 </select>
             </div>
     
             <div class="Puntos"><!--Boton donde seleccionar la puntuación que merece el alumno-->
-                <select class="form-select" aria-label="Default select example">
+                <select class="form-select" aria-label="Default select example" id="puntos">
                     <option selected>Puntos</option>
                     <option v-for="i in puntos">{{ i }}</option>
                 </select>
             </div>
-    
             <div>
-                <button type="button" class="botonaplicar">Aplicar Puntuación</button> 
+                <button type="button" class="botonaplicar" v-on:click="enviarSancion()">Aplicar Puntuación</button> 
             </div>
-    
         </div>
     </div>  
     <div v-else>
@@ -239,7 +304,7 @@ watch(recarga,(nuevo,viejo)=>{
             <h1 class="errorContent">{{ content }}</h1>
         </div>
     </div> 
-
+    <h3 v-bind:style="estiloSancion" id="textoSancion">{{ textoSancion }}</h3>
 <div id="contenedorPDF" v-show="!errorAlumnos">
     <embed type="text/html" src="/Puntos_Plan_De_Convivencia.pdf"  width="60%" height="700px">
 </div>
@@ -459,5 +524,7 @@ a, li{
     color: black;
     background-color: skyblue;  
 }
-
+#textoSancion{
+    text-align: center;
+}
 </style>

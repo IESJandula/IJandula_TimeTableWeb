@@ -1,13 +1,19 @@
 //!Añadir fichero de carga que contenga el basepath del hosting
 //!Base de datos
-//Crear endpoints para las operaciones CRUD de la base de datos
-//Implementar las operaciones CRUD del back al front
+//!Crear endpoints para las operaciones CRUD de la base de datos servicio
+//!Implementar las operaciones CRUD del back al front servicio
+//!Crear endpoints para las operaciones CRUD de la base de datos convivencia
+//Implementar las operaciones CRUD del back al front servicio convivencia
 //!Tildes en alumnos
 //!Correccion de errores
+//Pagina de datos no cargados en la web principal en vez de en su pagina propia
+//Configuracion de administrador en alumnos
 //Añadir a la documentacion los comandos de nvm (versionado de node)
 //Crear los roles
 //Pendiente paco: preguntar encarni xml vs csv nombre de los cursos, profesores en convivencia, añadir año academico, datos tutor legal y tutor academico
 
+import { Alumno } from "@/models/alumnos";
+import { Puntos } from "@/models/puntos";
 import basePath from "@/resources/path.json";
 
 const path = basePath.base_path;
@@ -750,5 +756,44 @@ export const getAulaNow = async(numIntAu,abreviatura,nombre) =>{
     catch(error)
     {
         console.log(error);
+    }
+}
+
+/**
+     * Metodo que hace una peticion al servidor para guardar en la base de datos
+     * una sancion que se impone a un alumno con unos puntos determinados
+     * @param {Alumno} student 
+     * @param {Puntos} points
+     * @returns true o false dependiendo del estado de la peticion
+     */
+export const ponerSancion = async(student,points) =>{
+    try
+    {
+        let params = {
+            value:points.points,
+            description:points.description
+        }
+
+        let url = path+"/horarios/send/sancion?"+new URLSearchParams(params).toString();
+
+        const response = await fetch(url,{
+            method:"POST",
+            headers: {
+                'Content-Type': 'application/json',
+              },
+            body:JSON.stringify(student),
+        });
+
+        if(!response.ok)
+        {
+            throw new Error("Error al imponer la sancion");
+        }
+
+        return true;  
+    }
+    catch(error)
+    {
+        console.log(error);
+        return false;
     }
 }
