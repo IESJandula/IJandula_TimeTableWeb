@@ -1,4 +1,4 @@
 {
     "old_path": "http://5.250.184.231:8088",
-    "base_path": "http://localhost:8088"
+    "base_path": "https://microservices-iesjandula.duckdns.org:8088"
 }
