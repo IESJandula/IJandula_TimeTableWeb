@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch,onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getStudentCourses,getSortStudentsCourse,getSortStudents,registrarIda,registrarVuelta,obtenerVisitasAlumno,obtenerVisitasAlumnos,sendErrorInfo } from '@/api/peticiones';
+import { getStudentCourses,getSortStudentsCourse,getSortStudents,registrarIda,registrarVuelta,obtenerVisitasAlumno,obtenerVisitasAlumnos,sendErrorInfo,obtenerNumeroVisitas } from '@/api/peticiones';
 import { Alumno } from '@/models/alumnos';
 import { RegistroVisita,AlumnoBathroom } from '@/models/visitas';
 import { separadorNombreCurso,compareDate,convertirFecha,checkData } from "@/js/utils";
@@ -220,7 +220,7 @@ const onChangeAlumnosIdaVuelta = () =>{
  * Evento que recoge los datos del alumno y el curso al cambiar el selector de alumnos
  * los encapsula en una tabla para luego mandarlos en una peticion http
  */
-const onChangeAlumnosStats = () =>{
+const onChangeAlumnosStats = async () =>{
     //Obtenemos el id del selector de alumnos
     const alumnoSelection = document.getElementById("alumnosStats");
     //Obtenemos su valor en bruto
@@ -239,7 +239,8 @@ const onChangeAlumnosStats = () =>{
     else
     {
         let alumnoObject = separadorNombreCurso(alumno,curso,_alumnos.value);
-        stats = ref([alumnoObject.name,alumnoObject.lastName,alumnoObject.course,"?"]);
+        let numeroVisitas = await obtenerNumeroVisitas(alumnoObject.name,alumnoObject.lastName,alumnoObject.course);
+        stats = ref([alumnoObject.name,alumnoObject.lastName,alumnoObject.course,numeroVisitas]);
         recarga.value = false;
     }
 }
@@ -345,9 +346,7 @@ const obtenerVisitaAlumnos = async(fechaInicio,fechaFin) =>{
 
         for(let i=0;i<data.length;i++)
         {
-            let alumno = new Alumno(data[i].name,data[i].lastName,data[i].course,data[i].course,data[i].matriculationYear,data[i].firstTutorLastName,data[i].secondTutorLastName,
-		        data[i].tutorName,data[i].tutorPhone,data[i].tutorEmail
-		        );
+            let alumno = new AlumnoBathroom(data[i].alumno.nombre,data[i].alumno.apellidos,data[i].curso,data[i].horas,data[i].dia)
             arrayListado.push(alumno);
         }
 
@@ -407,7 +406,7 @@ const onClickStats = () =>{
     else
     {
         let nombreApellido = separadorNombreCurso(alumno,curso,_alumnos.value);
-        obtenerVisitaAlumno(nombreApellido.nombre,nombreApellido.apellidos,curso,valorFechaInicio,valorFechaFin); 
+        obtenerVisitaAlumno(nombreApellido.name,nombreApellido.lastName,curso,valorFechaInicio,valorFechaFin); 
     }
 }
 
