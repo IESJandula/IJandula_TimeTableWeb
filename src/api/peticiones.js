@@ -7,12 +7,11 @@
 //!Tildes en alumnos
 //!Correccion de errores
 //!Pagina de datos no cargados en la web principal en vez de en su pagina propia
-//Añadir filtro de vuelta en visitas servicio
+//!Añadir filtro de vuelta en visitas servicio
 //Añadir a la documentacion los comandos de nvm (versionado de node)
 //Alumnos planos
 //Spring security 
 //Parte de tarde
-//Pendiente paco: preguntar encarni xml vs csv nombre de los cursos, profesores en convivencia, añadir año academico, datos tutor legal y tutor academico
 
 import { Alumno } from "@/models/alumnos";
 import { Puntos } from "@/models/puntos";
@@ -578,6 +577,32 @@ export const obtenerVisitasAlumnos = async(fechaInicio,fechaFin) =>{
     catch(error)
     {
         console.log(error);
+    }
+}
+
+export const obtenerNumeroVisitas = async (name,lastName,course) =>{
+    try
+    {
+        let params = {
+            name:name,
+            lastname:lastName,
+            course:course
+        }
+
+        let url = path+"/horarios/get/student/numero-veces-servicio?"+ new URLSearchParams(params).toString();
+
+        const response = await fetch(url);
+
+        if(!response.ok)
+        {
+            throw new Error("Error al obtener el numero de veces que un alumno ha ido al servicio");     
+        }
+
+        return await response.json();
+    }
+    catch(error)
+    {
+        console.log(error)
     }
 }
 
