@@ -9,7 +9,7 @@
 //!Pagina de datos no cargados en la web principal en vez de en su pagina propia
 //!Añadir filtro de vuelta en visitas servicio
 //Añadir a la documentacion los comandos de nvm (versionado de node)
-//Alumnos planos
+//?Alumnos planos
 //Spring security 
 //Parte de tarde
 
