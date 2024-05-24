@@ -519,7 +519,7 @@ body {
 
 #hoja-calculo {
     width: 100%;
-    height: 400px;
+    height: 600px;
     border: 2px solid black;
 }
 
