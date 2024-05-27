@@ -302,3 +302,41 @@ export const searchSancion  = (valor,puntos) =>{
 
     return sancion;
 }
+
+/**
+ * Metodo que devuelve el valor de los grupos para los planos de las aulas
+ * este valor puede tener uno o varios grupos
+ * @param {any[]} data 
+ * @returns texto con los grupos
+ */
+export const controlGrupos = (data) =>{
+    let textoGrupo = "Grupos: "
+
+    for(let i = 0;i<data.grupo.length;i++)
+    {
+        textoGrupo+=data.grupo[i].nombre+",";
+    }
+
+    textoGrupo = textoGrupo.substring(0,textoGrupo.length-1);
+
+    return textoGrupo;
+}
+/**
+ * Metodo que devuelve en un array de string los alumnos que se encuentran en el
+ * aula seleccionada en los planos
+ * @param {any[]} data 
+ * @returns 
+ */
+export const showStudentsInfo = (data) =>{
+    let alumnos = "Sin datos de alumnos";
+    if(data.alumnos.length!=0)
+    {
+        alumnos = [];
+        for(let i = 0;i<data.alumnos.length;i++)
+        {
+            alumnos.push(data.alumnos[i].name+" "+data.alumnos[i].lastName);
+        }
+    }
+
+    return alumnos;
+}

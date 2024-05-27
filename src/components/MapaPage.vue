@@ -2,7 +2,7 @@
 import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow } from '@/api/peticiones';
-import { checkData } from '@/js/utils';
+import { checkData,controlGrupos,showStudentsInfo } from '@/js/utils';
 import { Aula, DimensionPlano } from '@/models/aulas';
 import { Grupo } from '@/models/grupos';
 //Instancia del router para cambiar de componente
@@ -30,6 +30,8 @@ let infoProfe = ref("");
 let infoAsignatura = ref("");
 let infoGrupo = ref("");
 let textoRotacion = ref("");
+let tituloAlumnos = ref("");
+let infoAlumnos = ref([]);
 
 //Variables privadas
 let _cursos = ref([]);
@@ -214,7 +216,17 @@ const obtenerInfoAula = async (aula)=>{
         infoAula.value = "Aula: "+aula.nombre;
         infoProfe.value = "Profesor: "+data.profesor.nombre+" "+data.profesor.primerApellido+" "+data.profesor.segundoApellido;
         infoAsignatura.value = "Asignatura: "+data.asignatura.nombre;
-        infoGrupo.value = "Grupo: "+data.grupo.nombre;
+        infoGrupo.value = controlGrupos(data);
+        let dataAlumnos = showStudentsInfo(data);
+        if(typeof dataAlumnos!= "string")
+        {
+            tituloAlumnos.value = "----ALUMNOS----";
+            infoAlumnos = ref(dataAlumnos);
+        }
+        else
+        {
+            tituloAlumnos.value = "Sin informacion de alumnos";
+        }
         recarga.value = false;
     }
 }
@@ -376,6 +388,15 @@ watch(recarga,(nuevo,viejo) =>{
                     <p><span>{{ infoAsignatura }}</span></p>
                     <br>
                     <p><span>{{ infoGrupo }}</span></p>
+                    <br>
+                    <div v-if="tituloAlumnos!='Sin informacion de alumnos'">
+                        <p style="text-align: center;"><span>{{ tituloAlumnos }}</span></p>
+                        <br>
+                        <p v-for="i in infoAlumnos"><span>{{ i }}</span></p>
+                    </div>
+                    <div v-else>
+                        <p style="text-align: center;"><span>{{ tituloAlumnos }}</span></p>
+                    </div>
                 </div>
                 
 
