@@ -277,6 +277,10 @@ onMounted(async ()=>{
 
 onUnmounted(async ()=>{
     clearInterval(interval);
+    if(typeof _intervaloRotacion != "undefined")
+    {
+        clearInterval(_intervaloRotacion);
+    }
 })
 
 watch(recarga,(nuevo,viejo) =>{
