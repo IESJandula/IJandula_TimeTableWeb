@@ -10,8 +10,11 @@
 //!Añadir filtro de vuelta en visitas servicio
 //Añadir a la documentacion los comandos de nvm (versionado de node)
 //?Alumnos planos
-//Spring security 
+//Spring security por ahora como trabajo futuro 
 //Parte de tarde
+//Tener un listado de alumnos y averiguar donde estan
+//Actualizar los baños haciendo que si la vuelta es nula poner que el profesor x no le ha dado a regresar
+//Habilitar la localizacion de cursos en los planos
 
 import { Alumno } from "@/models/alumnos";
 import { Puntos } from "@/models/puntos";
