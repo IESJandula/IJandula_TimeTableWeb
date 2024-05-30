@@ -1,8 +1,9 @@
 import { Profesor } from "@/models/profesores";
 import { Tramo } from "@/models/tramos";
 import { Alumno } from "@/models/alumnos";
-import { checkServerData } from "@/api/peticiones";
+import { checkServerData,obtenerAulasPorPlanta } from "@/api/peticiones";
 import { Puntos } from "@/models/puntos";
+import { DimensionPlano } from "@/models/aulas";
 
 /**
  * Metodo que compara el nombre seleccionado con los datos cargadados
@@ -339,4 +340,23 @@ export const showStudentsInfo = (data) =>{
     }
 
     return alumnos;
+}
+
+/**
+ * Metodo que busca un aula por su id y devuelve
+ * la planta en la que se encuentra
+ * @param {string} numIntAu 
+ * @returns planta en la que se encuentra el aula
+ */
+export const findAulaById = async (numIntAu) =>{
+    let planta = "";
+    let aulas = await obtenerAulasPorPlanta("");
+    for(let i = 0;i<aulas.length;i++)
+    {
+        if(numIntAu==aulas[i].aula.numIntAu)
+        {
+            planta = aulas[i].planta;
+        }
+    }
+    return planta;
 }

@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow } from '@/api/peticiones';
-import { checkData,controlGrupos,showStudentsInfo } from '@/js/utils';
+import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow,getClassroomCourse } from '@/api/peticiones';
+import { checkData,controlGrupos,showStudentsInfo,findAulaById } from '@/js/utils';
 import { Aula, DimensionPlano } from '@/models/aulas';
 import { Grupo } from '@/models/grupos';
 //Instancia del router para cambiar de componente
@@ -32,6 +32,8 @@ let infoGrupo = ref("");
 let textoRotacion = ref("");
 let tituloAlumnos = ref("");
 let infoAlumnos = ref([]);
+let aulaEnfasis = ref("");
+let plantaEnfasis = ref("");
 
 //Variables privadas
 let _cursos = ref([]);
@@ -55,7 +57,7 @@ const restablecerDimension = () =>{
     root.style.setProperty("--map-height","936px");
 }
 
-const onClickPrimeraPlanta = () =>{
+const onClickPrimeraPlanta = (aula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
@@ -67,9 +69,10 @@ const onClickPrimeraPlanta = () =>{
     primeraPlanta.value = false;
     segundaPlanta.value = false;
     recarga.value = false;
+    aulaEnfasis.value = aula;
 }
 
-const onClickSegundaPlanta = () =>{
+const onClickSegundaPlanta = (aula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
@@ -81,9 +84,10 @@ const onClickSegundaPlanta = () =>{
     primeraPlanta.value = true;
     segundaPlanta.value = false;
     recarga.value = false;
+    aulaEnfasis.value = aula;
 }
 
-const onClickTerceraPlanta = () =>{
+const onClickTerceraPlanta = (aula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
@@ -95,6 +99,7 @@ const onClickTerceraPlanta = () =>{
     primeraPlanta.value = false;
     segundaPlanta.value = true;
     recarga.value = false;
+    aulaEnfasis.value = aula;
 }
 
 /**
@@ -130,7 +135,7 @@ const obtenerAulas = async (planta)=>{
         array.push(dimension);
     }
 
-    aulas = ref(array);
+    aulas.value = array;
     recarga.value = false;
 }
 
@@ -250,6 +255,37 @@ const activarDesactivarRotacion = (milisegundos,elemento)=>{
     }
 }
 
+const onChangeCourse = async () =>{
+    const cursoSelection = document.getElementById("selector-curso");
+    let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
+    const data = await getClassroomCourse(curso);
+    let planta = await findAulaById(data.classroom.number); 
+    //resetearEnfasis();
+    let aluaStr = String(data.classroom.number);
+    if(planta=="PLANTA BAJA")
+    {
+        onClickPrimeraPlanta(aluaStr);
+        recarga.value = false;
+    }
+    else if(planta=="PRIMERA PLANTA")
+    {
+        onClickSegundaPlanta(aluaStr);
+        recarga.value = false;
+    }
+    else if(planta=="SEGUNDA PLANTA")
+    {
+        onClickTerceraPlanta(aluaStr);
+        recarga.value = false;
+    }
+    recarga.value = false;
+
+    // const aula = document.getElementById(data.classroom.number);
+    // aula.className = "enfasis-aula";
+
+    let aula = new Aula(data.classroom.number,data.classroom.floor,data.classroom.name);
+    await obtenerInfoAula(aula);
+    
+}
 
 const cambioPlanta = ()=>{
 
@@ -265,6 +301,26 @@ const cambioPlanta = ()=>{
     {
         onClickPrimeraPlanta();
     }
+}
+
+const resetearEnfasis = async ()=>{
+    const aulas = await obtenerAulasPorPlanta("");
+
+    for(let i = 0;i<aulas.length;i++)
+    {
+        let numIntAu = aulas[i].aula.numIntAu;
+        const aula = document.getElementById(String(numIntAu));
+        if(aula==null)
+        {
+            continue;
+        }
+        else
+        {
+            aula.className = "";
+        }
+    }
+
+    aulaEnfasis.value = "";
 }
 
 onMounted(async ()=>{
@@ -289,6 +345,7 @@ watch(recarga,(nuevo,viejo) =>{
         recarga.value = true;
     }
 })
+
 </script>
 
 <template>
@@ -315,13 +372,9 @@ watch(recarga,(nuevo,viejo) =>{
         <div id="panel">
 
             <div id="panel-selector">
-                <!-- PARA PABLO DE SEGUNDO -->
-                <!-- Este formulario es un placeholder. Va alimentado por un endpoint que le dice que cursos existen en el sistema -->
-                <!-- La idea aqui imagino que es identificar las aulas y según el curso seleccionado, marcarlas en el plano con un efecto de colores o algo-->
-                <!-- Disculpad el desorden, si puedo hacer algo avisadme, soy David Jason de primero. -->
                 <form action="">
                     <label for="selector-curso">Localizador de cursos:</label>
-                    <select name="selector-curso" id="selector-curso">
+                    <select name="selector-curso" id="selector-curso" v-on:change="onChangeCourse()">
                         <option value="0">Seleccionar</option>
                         <option v-for="i in cursos">{{ i }}</option>
                     </select>           
@@ -335,9 +388,9 @@ watch(recarga,(nuevo,viejo) =>{
                 <div style="display: block; align-items: center;">
                     <!-- Botones de selección manual de planta -->
                     <div id="contenedor-botones-plantas"> 
-                        <button id="boton-planta-baja" v-on:click="onClickPrimeraPlanta()">Planta<br/>baja</button>
-                        <button id="boton-planta-primera" v-on:click="onClickSegundaPlanta()">Planta<br/>primera</button>
-                        <button id="boton-planta-segunda" v-on:click="onClickTerceraPlanta()">Planta<br/>segunda</button>
+                        <button id="boton-planta-baja" v-on:click="onClickPrimeraPlanta('')">Planta<br/>baja</button>
+                        <button id="boton-planta-primera" v-on:click="onClickSegundaPlanta('')">Planta<br/>primera</button>
+                        <button id="boton-planta-segunda" v-on:click="onClickTerceraPlanta('')">Planta<br/>segunda</button>
                     </div>
                     <!-- este div solo sirve para reflejar al usuario el estado de la rotación, por defecto desactivada-->
                     <div id="indicador" v-if="!_rotacion">Rotacion: Desactivada</div>
@@ -412,15 +465,15 @@ watch(recarga,(nuevo,viejo) =>{
         <div class="contenedor">       
           
                 <div id="planta-baja" class="caja-mapa" v-show="plantaBaja">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)"></div>
+                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
                 </div>   
 
                 <div id="planta-primera" class="caja-mapa" v-show="primeraPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)"></div>
+                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
                 </div>
 
                 <div id="planta-segunda" class=" caja-mapa" v-show="segundaPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)"></div>
+                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
                 </div>
         </div>
         <!-- FINAL Sección Mapas del centro -->
