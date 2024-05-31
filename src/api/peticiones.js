@@ -827,3 +827,27 @@ export const ponerSancion = async(student,points) =>{
         return false;
     }
 }
+
+export const parseCourseStudent = async(curso) =>{
+    try
+    {
+        const params = {
+            course:curso
+        };
+
+        let url = path+"/horarios/get/parse-course?"+new URLSearchParams(params).toString();
+
+        const response = await fetch(url);
+
+        if(!response.ok)
+        {
+            throw new Error("Error al parsear el curso del alumno a los datos generales");
+        }
+
+        return await response.json();
+    }
+    catch(error)
+    {
+        console.log(error);
+    }
+}
