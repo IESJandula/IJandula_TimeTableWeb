@@ -1,8 +1,9 @@
 import { Profesor } from "@/models/profesores";
 import { Tramo } from "@/models/tramos";
 import { Alumno } from "@/models/alumnos";
-import { checkServerData } from "@/api/peticiones";
+import { checkServerData,obtenerAulasPorPlanta } from "@/api/peticiones";
 import { Puntos } from "@/models/puntos";
+import { DimensionPlano } from "@/models/aulas";
 
 /**
  * Metodo que compara el nombre seleccionado con los datos cargadados
@@ -301,4 +302,61 @@ export const searchSancion  = (valor,puntos) =>{
     }
 
     return sancion;
+}
+
+/**
+ * Metodo que devuelve el valor de los grupos para los planos de las aulas
+ * este valor puede tener uno o varios grupos
+ * @param {any[]} data 
+ * @returns texto con los grupos
+ */
+export const controlGrupos = (data) =>{
+    let textoGrupo = "Grupos: "
+
+    for(let i = 0;i<data.grupo.length;i++)
+    {
+        textoGrupo+=data.grupo[i].nombre+",";
+    }
+
+    textoGrupo = textoGrupo.substring(0,textoGrupo.length-1);
+
+    return textoGrupo;
+}
+/**
+ * Metodo que devuelve en un array de string los alumnos que se encuentran en el
+ * aula seleccionada en los planos
+ * @param {any[]} data 
+ * @returns 
+ */
+export const showStudentsInfo = (data) =>{
+    let alumnos = "Sin datos de alumnos";
+    if(data.alumnos.length!=0)
+    {
+        alumnos = [];
+        for(let i = 0;i<data.alumnos.length;i++)
+        {
+            alumnos.push(data.alumnos[i].name+" "+data.alumnos[i].lastName);
+        }
+    }
+
+    return alumnos;
+}
+
+/**
+ * Metodo que busca un aula por su id y devuelve
+ * la planta en la que se encuentra
+ * @param {string} numIntAu 
+ * @returns planta en la que se encuentra el aula
+ */
+export const findAulaById = async (numIntAu) =>{
+    let planta = "";
+    let aulas = await obtenerAulasPorPlanta("");
+    for(let i = 0;i<aulas.length;i++)
+    {
+        if(numIntAu==aulas[i].aula.numIntAu)
+        {
+            planta = aulas[i].planta;
+        }
+    }
+    return planta;
 }

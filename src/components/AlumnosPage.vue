@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch,onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getStudentCourses,getSortStudentsCourse,getSortStudents,registrarIda,registrarVuelta,obtenerVisitasAlumno,obtenerVisitasAlumnos,sendErrorInfo,obtenerNumeroVisitas } from '@/api/peticiones';
+import { getStudentCourses,getSortStudentsCourse,getSortStudents,registrarIda,registrarVuelta,obtenerVisitasAlumno,obtenerVisitasAlumnos,sendErrorInfo,obtenerNumeroVisitas,getClassroomCourse,parseCourseStudent } from '@/api/peticiones';
 import { Alumno } from '@/models/alumnos';
 import { RegistroVisita,AlumnoBathroom } from '@/models/visitas';
 import { separadorNombreCurso,compareDate,convertirFecha,checkData } from "@/js/utils";
@@ -34,9 +34,14 @@ let errorAlumnos = ref(false);
 let header = ref("");
 let content = ref("");
 let interval = undefined;
-
+let filtradoCurso = ref(false);
+let filtradoAlumno = ref(false);
+let showLocAlumno = ref(false);
+let infoAlumno = ref("");
+let infoAula = ref("");
 //Variables privadas
 let _alumnos = ref([]);
+let _alumnosLoc = ref([]);
 let _infoAlumnos = ref([]);
 let _idaVueltaAlumnos = ref([]);
 let _statsAlumnos = ref([]);
@@ -45,6 +50,7 @@ let _mostrarIdaVueltaAlumnos = ref(false);
 let _mostrarStatsAlumnos = ref(false);
 let _visitasAlumno = ref([]); 
 let _listadoAlumno = ref([]);
+let _cursoValue = ref("");
 
 //Metodos
 /**
@@ -74,16 +80,19 @@ const cargarAlumnos = async()=>{
     const data = await getSortStudents();
 
     let arrayAlumno = [];
-
+    let arrayAlumnoLoc = [];
     for(let i=0;i<data.length;i++)
     {
         let alumno = new Alumno(data[i].name,data[i].lastName,data[i].course,data[i].matriculationYear,data[i].firstTutorLastName,data[i].secondTutorLastName,
 		        data[i].tutorName,data[i].tutorPhone,data[i].tutorEmail
 		        );
+    
         arrayAlumno.push(alumno);
+        arrayAlumnoLoc.push(alumno.name+" "+alumno.lastName);
     }
 
     _alumnos = ref(arrayAlumno);
+    _alumnosLoc = ref(arrayAlumnoLoc);
     recarga.value = false;
 }
 
@@ -105,6 +114,28 @@ const cargarAlumnos = async()=>{
     }
 
     alumnos.value = alumnosString;
+    //Llamada a la recarga de la pagina
+    recarga.value = false;
+}
+
+/**
+ * Metodo que recoge los nombres de los alumnos filtrados por el curso
+ * introducido como parametro 
+ * @param {string} curso 
+ */
+ const cargarAlumnosCursoLoc = async(curso)=>{
+    //Llamada a la peticion
+    const data = await getSortStudentsCourse(curso);
+    //Array de alumnos en formato string 
+    let alumnosString = [];
+    //Iterador de los datos que guarda los alumnos
+    for(let i = 0;i<data.length;i++)
+    {
+        let nombre = data[i].name+" "+data[i].lastName;
+        alumnosString.push(nombre);
+    }
+
+    _alumnosLoc.value = alumnosString;
     //Llamada a la recarga de la pagina
     recarga.value = false;
 }
@@ -537,6 +568,98 @@ const onClickTutorLegal = () =>{
 
 }
 
+const onChangeCourseSelector = ()=>{
+    filtradoCurso.value = true;
+    filtradoAlumno.value = false;
+    const cursoSelection = document.getElementById("selector-curso-loc");
+
+    let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
+
+    cargarAlumnosCursoLoc(curso);
+
+    recarga.value = false;
+}
+
+const onChangeAlumnoSelector = ()=>{
+    filtradoAlumno.value = true;
+    filtradoCurso.value = false;
+    const alumnoSelection = document.getElementById("selector-alumno-loc");
+
+    let alumno = alumnoSelection.options[alumnoSelection.selectedIndex].text;
+
+    let index = 0;
+    let out = false;
+
+    while(index<_alumnos.value.length && !out)
+    {
+        let item = _alumnos.value[index];
+        let value = item.name+" "+item.lastName;
+
+        if(alumno==value)
+        {
+            _cursoValue.value = item.course;
+            out = true;
+        }
+        index++;
+    }
+
+    if(!out)
+    {
+        _cursoValue.value = "No encontrado";
+    }
+
+}
+
+const onPressLocAlumno = async () =>{
+    const alumnoSelection = document.getElementById("selector-alumno-loc");
+    const cursoSelection = document.getElementById("selector-curso-loc");
+
+    let alumno = alumnoSelection.options[alumnoSelection.selectedIndex].text;
+
+    let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
+
+    const cursoParsed = await parseCourseStudent(curso);
+    const data = await getClassroomCourse(cursoParsed.curso);
+
+    if(typeof data == "undefined")
+    {
+        showLocAlumno.value = true;
+        infoAlumno.value = "No se ha podido encontrar la"
+        infoAula.value = "localizacion del alumno/a "+alumno;
+    }
+    else
+    {
+        showLocAlumno.value = true;
+        infoAlumno.value = "El alumno "+alumno
+        infoAula.value = "Debe encontrarse en el aula "+data.classroom.floor+" - "+data.classroom.name;
+    }
+
+    recarga.value = false;
+}
+
+const resetearSelector = async() =>{
+    const cursoSelection = document.getElementById("selector-curso-loc");
+    const alumnoSelection = document.getElementById("selector-alumno-loc");
+
+    //Seteamos el valor a 0 "Seleccionar" antes de restaurar los booleanos
+    cursoSelection.selectedIndex = 0;
+    alumnoSelection.selectedIndex = 0;
+
+    filtradoAlumno.value = false;
+    filtradoCurso.value = false;
+
+    //Seteamos el valor a 0 "Seleccionar" despues de restaurar los booleanos
+    cursoSelection.selectedIndex = 0;
+    alumnoSelection.selectedIndex = 0;
+
+    cargarAlumnos();
+    getCourse();
+
+    showLocAlumno.value = false;
+    _cursoValue.value = "No encontrado";
+    recarga.value = false;
+}
+
 /**
  * Metodo que se encarga de recoger los datos al entrar en la pagina
  */
@@ -606,10 +729,45 @@ watch(alumnos,(nuevo,viejo) => {
             </div>
        </header> 
        <div v-if="!errorAlumnos">
+        <div class="table-title">
+                <h2>Localizar Alumnos</h2>
+            </div>
+          
+
+            <div class="container-table-info-alumnos" v-show="recarga">
+                <div class="selectores-localizacion">
+                    <label>Cursos:</label>
+
+                    <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-if="filtradoAlumno">
+                        <option value="0" selected>{{ _cursoValue }}</option>
+                    </select>
+                    <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-else v-on:change="onChangeCourseSelector()">
+                        <option value="0" selected>Seleccionar</option>
+                        <option v-for="i in cursos">{{ i }}</option>
+                    </select>
+
+                    <label for="selector-alumno">Alumnos:</label class="selector-alumno">
+                        
+                    <select name="selector-alumno-loc" id="selector-alumno-loc" v-if="filtradoCurso">
+                        <option value="0" selected>Seleccionar</option>
+                        <option v-for="i in _alumnosLoc">{{ i }}</option>
+                    </select>
+                    <select name="selector-alumno" id="selector-alumno-loc" v-else v-on:change="onChangeAlumnoSelector()">
+                        <option value="0" selected>Seleccionar</option>
+                        <option v-for="i in _alumnosLoc">{{ i }}</option>
+                    </select>
+                </div>
+                <button id="botonStats" v-on:click="resetearSelector()">Resetear</button>
+                <button id="botonStats" class="button-style" v-on:click="onPressLocAlumno()">Localizar alumno</button>
+                <div id="infoAlumnos" v-show="showLocAlumno">
+                    <h3>{{ infoAlumno }}</h3>
+                    <h3>{{ infoAula }}</h3>
+                </div>
+            </div>
+
             <div class="table-title">
                 <h2>Info Alumnos</h2>
             </div>
-
             <div class="container-table-info-alumnos" v-show="recarga">
 
                 <div class="selectores">
@@ -649,8 +807,8 @@ watch(alumnos,(nuevo,viejo) => {
                                 <td>?</td>
                                 <td>
                                     <span class="action-btn">
-                                        <a href="#" v-on:click="onClickTutor()">Info Tutor</a>
-                                        <a href="#" v-on:click="onClickTutorLegal()">Info Tutor Legal</a>
+                                        <a  v-on:click="onClickTutor()">Info Tutor</a>
+                                        <a  v-on:click="onClickTutorLegal()">Info Tutor Legal</a>
                                     </span>
                                 </td>
                             </tr>
@@ -1221,4 +1379,27 @@ a, li{
     margin-left: 10%;
     background-color: rgb(230, 253, 253);
 }
+
+.selectores-localizacion{
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+
+.selector-curso{
+    margin-right: 28%;
+}
+
+.button-style{
+    margin-right: 4%;
+}
+#infoAlumnos{
+    background-color: rgb(116, 173, 190);
+    width: 60%;
+    margin-top: 3%;
+    margin-bottom: 2%;
+    margin-left: 20%;
+    border-radius: 10px;
+    border: 1px solid rgb(0, 70, 128);
+}
+
 </style>
