@@ -15,7 +15,7 @@
 //!Tener un listado de alumnos y averiguar donde estan
 //!Actualizar los baños haciendo que si la vuelta es nula poner que el profesor x no le ha dado a regresar
 //?Habilitar la localizacion de cursos en los planos (averiguar colocacion enfasis)
-//Arreglar el filtro de loc alumno para que salgan varios cursos en caso de que haya un alumno repetido
+//!Arreglar el filtro de loc alumno para que salgan varios cursos en caso de que haya un alumno repetido
 //Recoger varias aulas en los cursos
 //Arreglar lo de los alumnos en varios cursos
 //Colocar en planos los alumnos que estan en el baño
@@ -845,6 +845,26 @@ export const parseCourseStudent = async(curso) =>{
         if(!response.ok)
         {
             throw new Error("Error al parsear el curso del alumno a los datos generales");
+        }
+
+        return await response.json();
+    }
+    catch(error)
+    {
+        console.log(error);
+    }
+}
+
+export const getAlumnosInBathroom = async() =>{
+    try
+    {
+        let url = path+"/horarios/get/alumnos-bathroom";
+
+        const response = await fetch(url);
+
+        if(!response.ok)
+        {
+            throw new Error("No se han podido encontrar a los alumnos en el baño");
         }
 
         return await response.json();

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow,getClassroomCourse } from '@/api/peticiones';
+import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow,getClassroomCourse,getAlumnosInBathroom } from '@/api/peticiones';
 import { checkData,controlGrupos,showStudentsInfo,findAulaById } from '@/js/utils';
 import { Aula, DimensionPlano } from '@/models/aulas';
 import { Grupo } from '@/models/grupos';
@@ -31,7 +31,9 @@ let infoAsignatura = ref("");
 let infoGrupo = ref("");
 let textoRotacion = ref("");
 let tituloAlumnos = ref("");
+let tituloAlumnosBaño = ref("");
 let infoAlumnos = ref([]);
+let infoAlumnosBaño = ref([]);
 let aulaEnfasis = ref("");
 let plantaEnfasis = ref("");
 let refAula = ref("");
@@ -235,8 +237,49 @@ const obtenerInfoAula = async (aula)=>{
         {
             tituloAlumnos.value = "Sin informacion de alumnos";
         }
+        mostrarAlumnosBathroom(dataAlumnos);
         recarga.value = false;
     }
+}
+
+const mostrarAlumnosBathroom = async(alumnos)=>{
+    const alumnosBathroom = await getAlumnosInBathroom();
+
+    if(alumnosBathroom.length>0)
+    {
+        let array = []
+        
+        //Iteramos los alumnos y comparamos iterando los cursos
+        for(let i = 0;i<alumnosBathroom.length;i++)
+        {
+            for(let k = 0;k<alumnos.length;k++)
+            {
+                let alumno = alumnosBathroom[i].name+" "+alumnosBathroom[i].lastName;
+                if(alumno==alumnos[k])
+                {
+                    array.push(alumno);   
+                }
+            }  
+        }
+        if(array.length>0)
+        {
+            tituloAlumnosBaño.value = "----ALUMNOS EN EL BAÑO----";
+            infoAlumnosBaño = ref(array);
+        }
+        else
+        {
+            tituloAlumnosBaño.value = "No hay alumnos en el baño";
+            infoAlumnosBaño = ref([]);
+        }
+        
+    }
+    else
+    {
+        tituloAlumnosBaño.value = "No hay alumnos en el baño";
+    }
+    
+
+    recarga.value = false;
 }
 
 const activarDesactivarRotacion = (milisegundos,elemento)=>{
@@ -485,6 +528,14 @@ watch(segundaPlanta,(nuevo,viejo) =>
                     </div>
                     <div v-else>
                         <p style="text-align: center;"><span>{{ tituloAlumnos }}</span></p>
+                    </div>
+                    <div style="margin-top: 5%;" v-if="tituloAlumnosBaño=='No hay alumnos en el baño'">
+                        <p style="text-align: center;"><span>{{ tituloAlumnosBaño }}</span></p>
+                    </div>
+                    <div style="margin-top: 5%;" v-else>
+                        <p style="text-align: center; color: darkred; font-weight: bold;"><span>{{ tituloAlumnosBaño }}</span></p>
+                        <br>
+                        <p v-for="i in infoAlumnosBaño"><span>{{ i }}</span></p>
                     </div>
                 </div>
                 
