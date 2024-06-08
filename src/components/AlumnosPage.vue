@@ -736,16 +736,7 @@ watch(alumnos,(nuevo,viejo) => {
 
             <div class="container-table-info-alumnos" v-show="recarga">
                 <div class="selectores-localizacion">
-                    <label>Cursos:</label>
-
-                    <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-if="filtradoAlumno">
-                        <option value="0" selected>{{ _cursoValue }}</option>
-                    </select>
-                    <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-else v-on:change="onChangeCourseSelector()">
-                        <option value="0" selected>Seleccionar</option>
-                        <option v-for="i in cursos">{{ i }}</option>
-                    </select>
-
+                    
                     <label for="selector-alumno">Alumnos:</label class="selector-alumno">
                         
                     <select name="selector-alumno-loc" id="selector-alumno-loc" v-if="filtradoCurso">
@@ -755,6 +746,16 @@ watch(alumnos,(nuevo,viejo) => {
                     <select name="selector-alumno" id="selector-alumno-loc" v-else v-on:change="onChangeAlumnoSelector()">
                         <option value="0" selected>Seleccionar</option>
                         <option v-for="i in _alumnosLoc">{{ i }}</option>
+                    </select>
+
+                    <label class="label-curso">Cursos:</label>
+
+                    <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-if="filtradoAlumno">
+                        <option value="0" selected>{{ _cursoValue }}</option>
+                    </select>
+                    <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-else v-on:change="onChangeCourseSelector()">
+                        <option value="0" selected>Seleccionar</option>
+                        <option v-for="i in cursos">{{ i }}</option>
                     </select>
                 </div>
                 <button id="botonStats" v-on:click="resetearSelector()">Resetear</button>
@@ -1385,8 +1386,8 @@ a, li{
     margin-bottom: 2%;
 }
 
-.selector-curso{
-    margin-right: 28%;
+.label-curso{
+    margin-left: 20%;
 }
 
 .button-style{

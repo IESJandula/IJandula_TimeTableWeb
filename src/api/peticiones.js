@@ -8,14 +8,17 @@
 //!Correccion de errores
 //!Pagina de datos no cargados en la web principal en vez de en su pagina propia
 //!Añadir filtro de vuelta en visitas servicio
-//Añadir a la documentacion los comandos de nvm (versionado de node)
+//!Añadir a la documentacion los comandos de nvm (versionado de node)
 //!Alumnos planos
-//Spring security por ahora como trabajo futuro 
-//Parte de tarde
+//!Spring security por ahora como trabajo futuro 
+//!Parte de tarde (trabajo futuro)
 //!Tener un listado de alumnos y averiguar donde estan
 //!Actualizar los baños haciendo que si la vuelta es nula poner que el profesor x no le ha dado a regresar
 //?Habilitar la localizacion de cursos en los planos (averiguar colocacion enfasis)
-
+//Arreglar el filtro de loc alumno para que salgan varios cursos en caso de que haya un alumno repetido
+//Recoger varias aulas en los cursos
+//Arreglar lo de los alumnos en varios cursos
+//Colocar en planos los alumnos que estan en el baño
 import { Alumno } from "@/models/alumnos";
 import { Puntos } from "@/models/puntos";
 import basePath from "@/resources/path.json";

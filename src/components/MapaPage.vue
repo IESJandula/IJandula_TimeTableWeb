@@ -34,6 +34,7 @@ let tituloAlumnos = ref("");
 let infoAlumnos = ref([]);
 let aulaEnfasis = ref("");
 let plantaEnfasis = ref("");
+let refAula = ref("");
 
 //Variables privadas
 let _cursos = ref([]);
@@ -57,49 +58,51 @@ const restablecerDimension = () =>{
     root.style.setProperty("--map-height","936px");
 }
 
-const onClickPrimeraPlanta = (aula) =>{
+const onClickPlantaBaja = (idAula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
-    obtenerAulas("PLANTA BAJA");
+    obtenerAulas("planta-baja");
     imagenPlantaBaja.style.display = "block";
     imagenPlanta1.style.display = "none";
     imagenPlanta2.style.display = "none";
     plantaBaja.value = true;
     primeraPlanta.value = false;
     segundaPlanta.value = false;
+    refAula.value = idAula;
     recarga.value = false;
-    aulaEnfasis.value = aula;
+
 }
 
-const onClickSegundaPlanta = (aula) =>{
+const onClickPlantaPrimera = (idAula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
-    obtenerAulas("PRIMERA PLANTA");
+    obtenerAulas("planta-primera");
     imagenPlantaBaja.style.display = "none";
     imagenPlanta1.style.display = "block";
     imagenPlanta2.style.display = "none";
     plantaBaja.value = false;
     primeraPlanta.value = true;
     segundaPlanta.value = false;
+    refAula.value = idAula;
     recarga.value = false;
-    aulaEnfasis.value = aula;
 }
 
-const onClickTerceraPlanta = (aula) =>{
+const onClickPlantaSegunda = (idAula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
-    obtenerAulas("SEGUNDA PLANTA");
+    obtenerAulas("planta-segunda");
     imagenPlantaBaja.style.display = "none";
     imagenPlanta1.style.display = "none";
     imagenPlanta2.style.display = "block";
     plantaBaja.value = false;
     primeraPlanta.value = false;
     segundaPlanta.value = true;
+    refAula.value = idAula;
     recarga.value = false;
-    aulaEnfasis.value = aula;
+
 }
 
 /**
@@ -260,56 +263,53 @@ const onChangeCourse = async () =>{
     let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
     const data = await getClassroomCourse(curso);
     let planta = await findAulaById(data.classroom.number); 
-    //resetearEnfasis();
-    let aluaStr = String(data.classroom.number);
-    if(planta=="PLANTA BAJA")
-    {
-        onClickPrimeraPlanta(aluaStr);
-        recarga.value = false;
-    }
-    else if(planta=="PRIMERA PLANTA")
-    {
-        onClickSegundaPlanta(aluaStr);
-        recarga.value = false;
-    }
-    else if(planta=="SEGUNDA PLANTA")
-    {
-        onClickTerceraPlanta(aluaStr);
-        recarga.value = false;
-    }
-    recarga.value = false;
 
-    // const aula = document.getElementById(data.classroom.number);
-    // aula.className = "enfasis-aula";
+    let idAula = planta + "-" + data.classroom.number;
+    if(planta=="planta-baja")
+    {
+        onClickPlantaBaja(idAula);
+    }
+    else if(planta=="planta-primera")
+    {
+        onClickPlantaPrimera(idAula);
+    }
+    else if(planta=="planta-segunda")
+    {
+        onClickPlantaSegunda(idAula);
+    }
 
-    let aula = new Aula(data.classroom.number,data.classroom.floor,data.classroom.name);
-    await obtenerInfoAula(aula);
-    
+    recarga.value = false;    
 }
 
 const cambioPlanta = ()=>{
 
     if(plantaBaja.value)
     {
-        onClickSegundaPlanta();
+        onClickPlantaPrimera();
     }
     else if(primeraPlanta.value)
     {
-        onClickTerceraPlanta();
+        onClickPlantaSegunda();
     }
     else if(segundaPlanta.value)
     {
-        onClickPrimeraPlanta();
+        onClickPlantaBaja();
     }
 }
 
 const resetearEnfasis = async ()=>{
-    const aulas = await obtenerAulasPorPlanta("");
+    resetearEnfasisPlanta("planta-baja");
+    resetearEnfasisPlanta("planta-primera");
+    resetearEnfasisPlanta("planta-segunda");
+}
 
-    for(let i = 0;i<aulas.length;i++)
+const resetearEnfasisPlanta = async (planta)=>{
+    const aulas = await obtenerAulasPorPlanta(planta);
+
+    for(let i = 0; i<aulas.length ; i++)
     {
         let numIntAu = aulas[i].aula.numIntAu;
-        const aula = document.getElementById(String(numIntAu));
+        const aula = document.getElementById(planta + "-" + numIntAu);
         if(aula==null)
         {
             continue;
@@ -326,7 +326,7 @@ const resetearEnfasis = async ()=>{
 onMounted(async ()=>{
     root.style.setProperty('--map-width',"662px");
     root.style.setProperty('--map-height',"936px");
-    obtenerAulas("PLANTA BAJA");
+    obtenerAulas("planta-baja");
     obtenerCursos();
     interval = setInterval(checkStatus,500);
 });
@@ -343,6 +343,38 @@ watch(recarga,(nuevo,viejo) =>{
     if(!nuevo)
     {
         recarga.value = true;
+    }
+})
+
+watch(plantaBaja,(nuevo,viejo) =>
+{
+    if (nuevo && (refAula.value != undefined && refAula.value != "" && refAula.value!=null))
+    {
+        resetearEnfasis();
+        const aula = document.getElementById(refAula.value);
+        aula.className = "enfasis-aula";
+    }
+})
+
+watch(primeraPlanta,(nuevo,viejo) =>
+{
+
+    if (nuevo && (refAula.value != undefined && refAula.value != "" && refAula.value!=null))
+    {
+        resetearEnfasis();
+        const aula = document.getElementById(refAula.value);
+        aula.className = "enfasis-aula";
+    }
+})
+
+watch(segundaPlanta,(nuevo,viejo) =>
+{
+
+    if (nuevo && (refAula.value != undefined && refAula.value != "" && refAula.value!=null))
+    {
+        resetearEnfasis();
+        const aula = document.getElementById(refAula.value);
+        aula.className = "enfasis-aula";
     }
 })
 
@@ -388,9 +420,9 @@ watch(recarga,(nuevo,viejo) =>{
                 <div style="display: block; align-items: center;">
                     <!-- Botones de selección manual de planta -->
                     <div id="contenedor-botones-plantas"> 
-                        <button id="boton-planta-baja" v-on:click="onClickPrimeraPlanta('')">Planta<br/>baja</button>
-                        <button id="boton-planta-primera" v-on:click="onClickSegundaPlanta('')">Planta<br/>primera</button>
-                        <button id="boton-planta-segunda" v-on:click="onClickTerceraPlanta('')">Planta<br/>segunda</button>
+                        <button id="boton-planta-baja" v-on:click="onClickPlantaBaja('')">Planta<br/>baja</button>
+                        <button id="boton-planta-primera" v-on:click="onClickPlantaPrimera('')">Planta<br/>primera</button>
+                        <button id="boton-planta-segunda" v-on:click="onClickPlantaSegunda('')">Planta<br/>segunda</button>
                     </div>
                     <!-- este div solo sirve para reflejar al usuario el estado de la rotación, por defecto desactivada-->
                     <div id="indicador" v-if="!_rotacion">Rotacion: Desactivada</div>
@@ -465,15 +497,15 @@ watch(recarga,(nuevo,viejo) =>{
         <div class="contenedor">       
           
                 <div id="planta-baja" class="caja-mapa" v-show="plantaBaja">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
+                    <div v-for="itemAula in aulas" v-bind:style="classroomStyleRender(itemAula)" v-on:click="obtenerInfoAula(itemAula.aula)" v-bind:id="'planta-baja-' + itemAula.aula.numIntAu"></div>
                 </div>   
 
                 <div id="planta-primera" class="caja-mapa" v-show="primeraPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
+                    <div v-for="itemAula in aulas" v-bind:style="classroomStyleRender(itemAula)" v-on:click="obtenerInfoAula(itemAula.aula)" v-bind:id="'planta-primera-' + itemAula.aula.numIntAu"></div>
                 </div>
 
                 <div id="planta-segunda" class=" caja-mapa" v-show="segundaPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
+                    <div v-for="itemAula in aulas" v-bind:style="classroomStyleRender(itemAula)" v-on:click="obtenerInfoAula(itemAula.aula)" v-bind:id="'planta-segunda-' + itemAula.aula.numIntAu"></div>
                 </div>
         </div>
         <!-- FINAL Sección Mapas del centro -->
@@ -567,7 +599,7 @@ body{
 .enfasis-aula{
     animation-name: enfasis;
     animation-duration: 0.33s;
-    animation-iteration-count: infinite;
+    animation-iteration-count: 10;
     animation-direction: alternate;
 }
 
