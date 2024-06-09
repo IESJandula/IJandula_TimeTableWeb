@@ -18,7 +18,7 @@
 //!Arreglar el filtro de loc alumno para que salgan varios cursos en caso de que haya un alumno repetido
 //Recoger varias aulas en los cursos
 //Arreglar lo de los alumnos en varios cursos
-//Colocar en planos los alumnos que estan en el baño
+//!Colocar en planos los alumnos que estan en el baño
 import { Alumno } from "@/models/alumnos";
 import { Puntos } from "@/models/puntos";
 import basePath from "@/resources/path.json";
