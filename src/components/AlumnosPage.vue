@@ -50,7 +50,7 @@ let _mostrarIdaVueltaAlumnos = ref(false);
 let _mostrarStatsAlumnos = ref(false);
 let _visitasAlumno = ref([]); 
 let _listadoAlumno = ref([]);
-let _cursoValue = ref("");
+let _cursosAlumno = ref([]);
 
 //Metodos
 /**
@@ -588,26 +588,24 @@ const onChangeAlumnoSelector = ()=>{
     let alumno = alumnoSelection.options[alumnoSelection.selectedIndex].text;
 
     let index = 0;
-    let out = false;
+    let array = [];
 
-    while(index<_alumnos.value.length && !out)
+    for(let i = 0;i<_alumnos.value.length;i++)
     {
-        let item = _alumnos.value[index];
+        let item = _alumnos.value[i];
         let value = item.name+" "+item.lastName;
-
+    
         if(alumno==value)
         {
-            _cursoValue.value = item.course;
-            out = true;
+            array.push(item.course);
         }
-        index++;
     }
-
-    if(!out)
+    if(array.length==0)
     {
-        _cursoValue.value = "No encontrado";
+        array.push("No encontrado");
     }
 
+    _cursosAlumno = ref(array);
 }
 
 const onPressLocAlumno = async () =>{
@@ -751,7 +749,7 @@ watch(alumnos,(nuevo,viejo) => {
                     <label class="label-curso">Cursos:</label>
 
                     <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-if="filtradoAlumno">
-                        <option value="0" selected>{{ _cursoValue }}</option>
+                        <option v-for="i in _cursosAlumno">{{ i }}</option>
                     </select>
                     <select name="selector-curso" id="selector-curso-loc" class="selector-curso" v-else v-on:change="onChangeCourseSelector()">
                         <option value="0" selected>Seleccionar</option>
