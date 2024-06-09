@@ -128,11 +128,22 @@ const getCourse = async () =>{
 const getLocTeacher = async (nombre,apellidos)=>{
     //Llamada a la peticion
     const data = await getTeacherClassroom(nombre,apellidos);
+    //Se controla la fecha en caso de que sea sabado o domingo
+    let date = new Date();
+    console.log(date.getDay());
     //Se evalua que la peticion haya devuelto el aula para mostralo en un PopUp
     if(typeof data == "undefined")
     {
         infoProfe.value = "El profesor/a "+nombre+" "+apellidos;
         noAula.value = "  No se encuentra ningun aula  ";
+    }
+    else if(date.getDay()==0)
+    {
+        noAula.value = "No se puede buscar un profesor en domingo";
+    }
+    else if(date.getDay()==6)
+    {
+        noAula.value = "No se puede buscar un profesor en sabado";
     }
     else if(typeof data.classroom.floor == "undefined" || typeof data.classroom.number == "undefined" || data.classroom.name == "Sin asignar o sin aula")
     {
