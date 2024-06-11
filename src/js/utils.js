@@ -175,7 +175,7 @@ export const separadorNombreCurso = (alumno,curso,alumnos) =>{
         let item = alumnos[i];
         let itemValue = item.name+" "+item.lastName;
 
-        if(itemValue==alumno)
+        if(itemValue==alumno && item.course==curso)
         {       
             alumnoFound = new Alumno(item.name,item.lastName,item.course,item.matriculationYear,item.firstTutorLastName,item.secondTutorLastName,
 		        item.tutorName,item.tutorPhone,item.tutorEmail

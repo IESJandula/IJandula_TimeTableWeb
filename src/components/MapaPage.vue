@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, onMounted,onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow,getClassroomCourse } from '@/api/peticiones';
+import { obtenerAulasPorPlanta,getCourses,sendErrorInfo,getAulaNow,getClassroomCourse,getAlumnosInBathroom } from '@/api/peticiones';
 import { checkData,controlGrupos,showStudentsInfo,findAulaById } from '@/js/utils';
 import { Aula, DimensionPlano } from '@/models/aulas';
 import { Grupo } from '@/models/grupos';
@@ -16,10 +16,13 @@ const root = document.querySelector(":root");
 
 //Variables
 let plantaBaja = ref(true);
-let primeraPlanta = ref(false);
-let segundaPlanta = ref(false);
+let plantaPrimera = ref(false);
+let plantaSegunda = ref(false);
 let recarga = ref(true);
-let aulas = ref([]);
+let aulasTodas = ref([]);
+let aulasPlantaBaja = ref([]);
+let aulasPlantaPrimera = ref([]);
+let aulasPlantaSegunda = ref([]);
 let cursos = ref([]);
 let errorData = ref(false);
 let header = ref("");
@@ -31,9 +34,10 @@ let infoAsignatura = ref("");
 let infoGrupo = ref("");
 let textoRotacion = ref("");
 let tituloAlumnos = ref("");
+let tituloAlumnosBaño = ref("");
 let infoAlumnos = ref([]);
+let infoAlumnosBaño = ref([]);
 let aulaEnfasis = ref("");
-let plantaEnfasis = ref("");
 
 //Variables privadas
 let _cursos = ref([]);
@@ -57,50 +61,81 @@ const restablecerDimension = () =>{
     root.style.setProperty("--map-height","936px");
 }
 
-const onClickPrimeraPlanta = (aula) =>{
+const onClickPlantaBaja = (idAula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
-    obtenerAulas("PLANTA BAJA");
     imagenPlantaBaja.style.display = "block";
     imagenPlanta1.style.display = "none";
     imagenPlanta2.style.display = "none";
     plantaBaja.value = true;
-    primeraPlanta.value = false;
-    segundaPlanta.value = false;
-    recarga.value = false;
-    aulaEnfasis.value = aula;
+    plantaPrimera.value = false;
+    plantaSegunda.value = false;
+    hacerEnfasis(idAula);
 }
 
-const onClickSegundaPlanta = (aula) =>{
+const onClickPlantaPrimera = (idAula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
-    obtenerAulas("PRIMERA PLANTA");
     imagenPlantaBaja.style.display = "none";
     imagenPlanta1.style.display = "block";
     imagenPlanta2.style.display = "none";
     plantaBaja.value = false;
-    primeraPlanta.value = true;
-    segundaPlanta.value = false;
-    recarga.value = false;
-    aulaEnfasis.value = aula;
+    plantaPrimera.value = true;
+    plantaSegunda.value = false;
+    hacerEnfasis(idAula);
 }
 
-const onClickTerceraPlanta = (aula) =>{
+const onClickPlantaSegunda = (idAula) =>{
     const imagenPlantaBaja = document.getElementById("planta-baja");
     const imagenPlanta1 = document.getElementById("planta-primera");
     const imagenPlanta2 = document.getElementById("planta-segunda");
-    obtenerAulas("SEGUNDA PLANTA");
     imagenPlantaBaja.style.display = "none";
     imagenPlanta1.style.display = "none";
     imagenPlanta2.style.display = "block";
     plantaBaja.value = false;
-    primeraPlanta.value = false;
-    segundaPlanta.value = true;
-    recarga.value = false;
-    aulaEnfasis.value = aula;
+    plantaPrimera.value = false;
+    plantaSegunda.value = true;
+    hacerEnfasis(idAula);
 }
+
+const hacerEnfasis = (idAula) => {
+
+    if ((idAula != undefined && idAula != "" && idAula != null))
+    {
+        resetearEnfasis();
+        const aula = document.getElementById(idAula);
+        aula.className = "enfasis-aula";
+        setTimeout(() => 
+        {
+            aula.className = "" ;
+        }, 3800);
+    }
+
+}
+
+const resetearEnfasis = ()=>{
+    resetearEnfasisPlanta("planta-baja", aulasPlantaBaja.value);
+    resetearEnfasisPlanta("planta-primera", aulasPlantaPrimera.value);
+    resetearEnfasisPlanta("planta-segunda", aulasPlantaSegunda.value);
+}
+
+const resetearEnfasisPlanta = async (planta, aulasPlanta)=>{
+
+    for(let i = 0; i < aulasPlanta.length ; i++)
+    {
+        let numIntAu = aulasPlanta[i].aula.numIntAu;
+        const aula = document.getElementById(planta + "-" + numIntAu);
+        if(aula != null)
+        {
+            aula.className = "";
+        }
+    }
+
+    aulaEnfasis.value = "";
+}
+
 
 /**
  * Metodo que renderiza el aula asignado el estilo de la misma
@@ -124,40 +159,6 @@ const classroomStyleRender = (aula) =>{
     return estilos; 
 }
 
-const obtenerAulas = async (planta)=>{
-    const data = await obtenerAulasPorPlanta(planta);
-    
-    let array = [];
-
-    for(let i = 0;i<data.length;i++)
-    {
-        let dimension = new DimensionPlano(data[i].height,data[i].width,data[i].top,data[i].right,data[i].left,data[i].planta,data[i].aula);
-        array.push(dimension);
-    }
-
-    aulas.value = array;
-    recarga.value = false;
-}
-
-const obtenerCursos = async ()=>{
-    const data = await getCourses();
-
-    let arrayString = [];
-    let array = [];
-
-    for(let i = 0;i<data.length;i++)
-    {
-        let curso = new Grupo(data[i].numIntGr,data[i].abreviatura,data[i].nombre);
-        array.push(curso);
-        arrayString.push(data[i].nombre);
-    }
-
-    cursos = ref(arrayString);
-    _cursos = ref(array);
-
-    recarga.value = false;
-}
-
 const checkStatus = async() =>{
     let error = await checkData();
     if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
@@ -166,7 +167,6 @@ const checkStatus = async() =>{
         header.value = error.headerInfo;
         content.value = error.infoError;
         errorData.value = true;
-        recarga.value = false;
     }
     else if(error.headerInfo=="Servidor no lanzado")
     {
@@ -178,7 +178,6 @@ const checkStatus = async() =>{
         header.value = error.headerInfo;
         content.value = error.infoError;
         errorData.value = true;
-        recarga.value = false;
     }
     else if(error.headerInfo=="Datos de planos no cargados")
     {
@@ -186,7 +185,6 @@ const checkStatus = async() =>{
         header.value = error.headerInfo;
         content.value = error.infoError;
         errorData.value = true;
-        recarga.value = false;
     }
     else if(typeof error!="undefined")
     {
@@ -194,8 +192,6 @@ const checkStatus = async() =>{
         content.value = "";
         errorData.value = false;
         obtenerCursos();
-        recarga.value = false;
-        let array = aulas.value;
     }
 }
 
@@ -214,7 +210,6 @@ const obtenerInfoAula = async (aula)=>{
         infoProfe.value = "";
         infoAsignatura.value = "";
         infoGrupo.value = "";
-        recarga.value = false;
     }
     else
     {
@@ -232,7 +227,44 @@ const obtenerInfoAula = async (aula)=>{
         {
             tituloAlumnos.value = "Sin informacion de alumnos";
         }
-        recarga.value = false;
+        mostrarAlumnosBathroom(dataAlumnos);
+    }
+}
+
+const mostrarAlumnosBathroom = async(alumnos)=>{
+    const alumnosBathroom = await getAlumnosInBathroom();
+
+    if(alumnosBathroom.length>0)
+    {
+        let array = []
+        
+        //Iteramos los alumnos y comparamos iterando los cursos
+        for(let i = 0;i<alumnosBathroom.length;i++)
+        {
+            for(let k = 0;k<alumnos.length;k++)
+            {
+                let alumno = alumnosBathroom[i].name+" "+alumnosBathroom[i].lastName;
+                if(alumno==alumnos[k])
+                {
+                    array.push(alumno);   
+                }
+            }  
+        }
+        if(array.length>0)
+        {
+            tituloAlumnosBaño.value = "----ALUMNOS EN EL BAÑO----";
+            infoAlumnosBaño = ref(array);
+        }
+        else
+        {
+            tituloAlumnosBaño.value = "No hay alumnos en el baño";
+            infoAlumnosBaño = ref([]);
+        }
+        
+    }
+    else
+    {
+        tituloAlumnosBaño.value = "No hay alumnos en el baño";
     }
 }
 
@@ -260,84 +292,95 @@ const onChangeCourse = async () =>{
     let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
     const data = await getClassroomCourse(curso);
     let planta = await findAulaById(data.classroom.number); 
-    //resetearEnfasis();
-    let aluaStr = String(data.classroom.number);
-    if(planta=="PLANTA BAJA")
-    {
-        onClickPrimeraPlanta(aluaStr);
-        recarga.value = false;
-    }
-    else if(planta=="PRIMERA PLANTA")
-    {
-        onClickSegundaPlanta(aluaStr);
-        recarga.value = false;
-    }
-    else if(planta=="SEGUNDA PLANTA")
-    {
-        onClickTerceraPlanta(aluaStr);
-        recarga.value = false;
-    }
-    recarga.value = false;
 
-    // const aula = document.getElementById(data.classroom.number);
-    // aula.className = "enfasis-aula";
-
-    let aula = new Aula(data.classroom.number,data.classroom.floor,data.classroom.name);
-    await obtenerInfoAula(aula);
-    
+    let idAula = planta + "-" + data.classroom.number;
+    if(planta=="planta-baja")
+    {
+        onClickPlantaBaja(idAula);
+    }
+    else if(planta=="planta-primera")
+    {
+        onClickPlantaPrimera(idAula);
+    }
+    else if(planta=="planta-segunda")
+    {
+        onClickPlantaSegunda(idAula);
+    } 
 }
 
 const cambioPlanta = ()=>{
 
     if(plantaBaja.value)
     {
-        onClickSegundaPlanta();
+        onClickPlantaPrimera();
     }
-    else if(primeraPlanta.value)
+    else if(plantaPrimera.value)
     {
-        onClickTerceraPlanta();
+        onClickPlantaSegunda();
     }
-    else if(segundaPlanta.value)
+    else if(plantaSegunda.value)
     {
-        onClickPrimeraPlanta();
+        onClickPlantaBaja();
     }
-}
-
-const resetearEnfasis = async ()=>{
-    const aulas = await obtenerAulasPorPlanta("");
-
-    for(let i = 0;i<aulas.length;i++)
-    {
-        let numIntAu = aulas[i].aula.numIntAu;
-        const aula = document.getElementById(String(numIntAu));
-        if(aula==null)
-        {
-            continue;
-        }
-        else
-        {
-            aula.className = "";
-        }
-    }
-
-    aulaEnfasis.value = "";
 }
 
 onMounted(async ()=>{
     root.style.setProperty('--map-width',"662px");
     root.style.setProperty('--map-height',"936px");
-    obtenerAulas("PLANTA BAJA");
+    obtenerAulas("planta-baja");
+    obtenerAulas("planta-primera");
+    obtenerAulas("planta-segunda");
     obtenerCursos();
     interval = setInterval(checkStatus,500);
 });
 
-onUnmounted(async ()=>{
-    clearInterval(interval);
-    if(typeof _intervaloRotacion != "undefined")
+const obtenerAulas = async (planta)=>{
+    const data = await obtenerAulasPorPlanta(planta);
+    
+    let array = [];
+
+    for(let i = 0;i<data.length;i++)
     {
-        clearInterval(_intervaloRotacion);
+        let dimension = new DimensionPlano(data[i].height,data[i].width,data[i].top,data[i].right,data[i].left,data[i].planta,data[i].aula);
+        array.push(dimension);
     }
-})
+
+    if (planta == "planta-baja")
+    {
+        aulasPlantaBaja.value = array;
+    }
+    else if (planta == "planta-primera")
+    {
+        aulasPlantaPrimera.value = array;
+    }
+    else if (planta == "planta-segunda")
+    {
+        aulasPlantaSegunda.value = array;
+    }
+    else
+    {
+        // Todas las aulas
+        aulasTodas.value = array;
+    }
+}
+
+const obtenerCursos = async ()=>{
+    const data = await getCourses();
+
+    let arrayString = [];
+    let array = [];
+
+    for(let i = 0;i<data.length;i++)
+    {
+        let curso = new Grupo(data[i].numIntGr,data[i].abreviatura,data[i].nombre);
+        array.push(curso);
+        arrayString.push(data[i].nombre);
+    }
+
+    cursos = ref(arrayString);
+    _cursos = ref(array);
+    recarga.value = false;
+}
 
 watch(recarga,(nuevo,viejo) =>{
     if(!nuevo)
@@ -346,6 +389,13 @@ watch(recarga,(nuevo,viejo) =>{
     }
 })
 
+onUnmounted(async ()=>{
+    clearInterval(interval);
+    if(typeof _intervaloRotacion != "undefined")
+    {
+        clearInterval(_intervaloRotacion);
+    }
+})
 </script>
 
 <template>
@@ -388,9 +438,9 @@ watch(recarga,(nuevo,viejo) =>{
                 <div style="display: block; align-items: center;">
                     <!-- Botones de selección manual de planta -->
                     <div id="contenedor-botones-plantas"> 
-                        <button id="boton-planta-baja" v-on:click="onClickPrimeraPlanta('')">Planta<br/>baja</button>
-                        <button id="boton-planta-primera" v-on:click="onClickSegundaPlanta('')">Planta<br/>primera</button>
-                        <button id="boton-planta-segunda" v-on:click="onClickTerceraPlanta('')">Planta<br/>segunda</button>
+                        <button id="boton-planta-baja" v-on:click="onClickPlantaBaja('')">Planta<br/>baja</button>
+                        <button id="boton-planta-primera" v-on:click="onClickPlantaPrimera('')">Planta<br/>primera</button>
+                        <button id="boton-planta-segunda" v-on:click="onClickPlantaSegunda('')">Planta<br/>segunda</button>
                     </div>
                     <!-- este div solo sirve para reflejar al usuario el estado de la rotación, por defecto desactivada-->
                     <div id="indicador" v-if="!_rotacion">Rotacion: Desactivada</div>
@@ -454,6 +504,14 @@ watch(recarga,(nuevo,viejo) =>{
                     <div v-else>
                         <p style="text-align: center;"><span>{{ tituloAlumnos }}</span></p>
                     </div>
+                    <div style="margin-top: 5%;" v-if="tituloAlumnosBaño=='No hay alumnos en el baño'">
+                        <p style="text-align: center;"><span>{{ tituloAlumnosBaño }}</span></p>
+                    </div>
+                    <div style="margin-top: 5%;" v-else>
+                        <p style="text-align: center; color: darkred; font-weight: bold;"><span>{{ tituloAlumnosBaño }}</span></p>
+                        <br>
+                        <p v-for="i in infoAlumnosBaño"><span>{{ i }}</span></p>
+                    </div>
                 </div>
                 
 
@@ -465,15 +523,15 @@ watch(recarga,(nuevo,viejo) =>{
         <div class="contenedor">       
           
                 <div id="planta-baja" class="caja-mapa" v-show="plantaBaja">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
+                    <div v-for="itemAula in aulasPlantaBaja" v-bind:style="classroomStyleRender(itemAula)" v-on:click="obtenerInfoAula(itemAula.aula)" v-bind:id="'planta-baja-' + itemAula.aula.numIntAu"></div>
                 </div>   
 
-                <div id="planta-primera" class="caja-mapa" v-show="primeraPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
+                <div id="planta-primera" class="caja-mapa" v-show="plantaPrimera">
+                    <div v-for="itemAula in aulasPlantaPrimera" v-bind:style="classroomStyleRender(itemAula)" v-on:click="obtenerInfoAula(itemAula.aula)" v-bind:id="'planta-primera-' + itemAula.aula.numIntAu"></div>
                 </div>
 
-                <div id="planta-segunda" class=" caja-mapa" v-show="segundaPlanta">
-                    <div v-for="i in aulas" v-bind:style="classroomStyleRender(i)" v-on:click="obtenerInfoAula(i.aula)" v-bind:id="i.aula.numIntAu"></div>
+                <div id="planta-segunda" class=" caja-mapa" v-show="plantaSegunda">
+                    <div v-for="itemAula in aulasPlantaSegunda" v-bind:style="classroomStyleRender(itemAula)" v-on:click="obtenerInfoAula(itemAula.aula)" v-bind:id="'planta-segunda-' + itemAula.aula.numIntAu"></div>
                 </div>
         </div>
         <!-- FINAL Sección Mapas del centro -->
@@ -495,446 +553,8 @@ watch(recarga,(nuevo,viejo) =>{
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+@import url("../assets/common.css");
+@import url("../assets/mapa.css");
 
-/*Resalta el boton de la barra de navegación de la sección para las migajas*/
-.nav-menu li:last-child{
-    background-color: rgb(222, 252, 253) !important;
-    border-color: rgb(0, 0, 0);
-}
-/*Resalta el boton de la barra de navegación de la sección para las migajas*/
-.nav-menu li:last-child a{
-    color: rgb(34, 46, 83) !important;
-    font-weight: bold !important;
-}
-
-/* Esta clase solo está para que la demo de la caja de información*/ 
-/* que aparece al hacer hover sobre las aulas funcione. */
-.aparece{
-    display: block !important;
-}
-
-/*borra esto cuando veas*/
-/*Estas son las cajas que aparecen en la demo al hacer hover.*/
-#cuadro, #cuadro2{
-    background-color: rgb(215, 243, 252) !important;
-    display: none;
-    position: absolute;
-    top: 40%;
-    left: 40%;
-    border: 1px solid black;
-    border-radius: 10px;
-    padding: 15px;
-    z-index: 99;
-    box-shadow: 10px 10px 10px ;
-    transition: all;
-    transition: 0.2s;
-}
-
-/*A partir de aqui son cosas importantes de estilo*/ 
-* {
-    padding: 0;
-    margin: 0;
-    font-size: 16px; 
-}
-
-body{
-    background-color: rgb(243, 235, 243);
-    font-family: 'Open Sans';
-}
-
-:root {
-    --map-width: 300px;
-    --map-height: 300px;
-    --status-color: red;
-}
-
-/*Animación que marca el aula seleccionada en el localizador de cursos.*/
-@keyframes enfasis {
-    from {
-        background-color: rgba(255, 0, 0, 0);
-    }
-    to {
-        background-color: rgba(29, 117, 218, 0.75);
-        border: 1px solid rgb(0, 0, 0);
-        box-shadow: 0px 0px 10px 5px red;
-    }
-  }
-
-
-/*Esta clase es para enfatizar las aulas
- mediante la función de "Localizador curso.
- Funciona invocando la animación de arriba. */
-.enfasis-aula{
-    animation-name: enfasis;
-    animation-duration: 0.33s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-}
-
-/*Conjunto de mediaqueries que dan el valor inicial a la variable root para el tamaño de los planos */
-@media screen and (max-width: 4096px) {
-    :root {
-        --map-width: 2808px;
-        --map-height: 1984px;
-    }
-}
-
-@media screen and (max-width: 2048px) {
-    :root {
-        --map-width: 1404px;
-        --map-height: 992px;
-    }
-}
-
-@media screen and (max-width: 1920px) {
-    :root {
-        --map-width: 1170px;
-        --map-height: 827px;
-    }
-}
-
-@media screen and (max-width: 1440px) {
-    :root {
-        --map-width: 1100px;
-        --map-height: 777px;
-    }
-}
-
-@media screen and (max-width: 1366px) {
-    :root {
-        --map-width: 936px;
-        --map-height: 662px;
-    }
-}
-
-@media screen and (max-width: 1280px) {
-    :root {
-        --map-width: 936px;
-        --map-height: 662px;
-    }
-}
-
-/*Da estilo al texto de "Rotación activa"*/
-#rotacionActiva {
-    font-weight: bold;
-    color: var(--status-color);
-}
-/*Da estilo al texto de "Rotación desactivada"*/
-#rotacionNoActiva {
-    font-weight: bold;
-    color: var(--status-color);
-}
-
-
-#contenedor-botones-plantas{
-    display:flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-
-/*Define las dimensiones del plano en pantalla.*/
-/*NO DIMENSIONAR CON PORCENTAJES O PETARÁ */
-.caja-mapa {
-    height: var(--map-height);
-    width: var(--map-width);
-    border: 3px solid var(--status-color);
-    margin-top: 10px;
-
-}
-/*Panel contenedor de los modulos de la izquierda.*/
-#panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: 5px;
-    height: 913px;
-    width: 310px;
-}
-/*Aplica las reglas a todos los hijos del panel lateral izquierdo*/
-#panel>*{
-    border-radius: 5px;
-    border: 1px solid grey;
-    background-color: rgb(255, 255, 255);
-    padding:10px;
-    margin: 5px;
-}
-
-#contenedor-botones-plantas{
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-/*Titulos del panel lateral izquierdo.*/
-.titulo-djg{
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-#panel-selector {
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-}
-
-#djg-main-box{
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    background-color: rgb(241, 241, 224);
-}
-
-
-#contenedor-botones-dimensiones {
-    display: none;
-    flex-direction: column;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    margin-top:10px;
-}
-
-#contenedor-columnas-dimensiones {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    width: 100%;
-}
-
-.columna-dimensiones{
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-#selector-dimensiones{
-    border-radius: 5px;
-    margin: 5px;
-    padding: 3px;
-}
-
-#contenedor-info-box-endpoints {
-    margin-top:10px;
-    height: auto;
-    background-color: rgb(230, 248, 253);
-    transition: 1s;
-    transition: all;
-}
-
-#selector-curso{
-    padding: 3px;
-    margin-top: 5px;
-    border-radius: 5px;
-    background-color: rgb(238, 243, 242);
-}
-
-button {
-    cursor: pointer;
-    color: rgb(0, 0, 0);
-    background-color: rgb(238, 243, 242);
-    transition: 0.2s;
-    border-radius: 5px;
-    border: 1px solid black;
-    margin: 5px;
-    padding: 3px;
-}
-
-#contenedor-botones-rotacion button{
-    /*Para diseño interactivo*/
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    margin-top: 8px;
-    margin-bottom: 8px;
-}
-
-#contenedor-botones-rotacion button.boton-active,
-#contenedor-botones-dimensiones button.boton-active {
-    color: rgb(255, 255, 255);
-    background-color:  rgb(31, 155, 203);
-    transition: 0.2s;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-    margin-top: 0px !important;
-    margin-bottom: 0px !important;
-    font-weight: bold;
-}
-
-#contenedor-botones-rotacion button:hover,
-.columna-dimensiones button:hover {
-    color: rgb(0, 0, 0);
-    background-color:  rgb(253, 255, 121);
-    transition: 0.2s;
-}
-
-
-#restablecer:hover{
-    color: rgb(0, 0, 0);
-    background-color:  rgb(252, 218, 174);
-}
-
-.boton-active {
-    color: rgb(255, 255, 255);
-    background-color:  rgb(31, 155, 203);
-    transition: 0.2s;
-}
-
-.boton-active-temp {
-    color: rgb(0, 26, 255);
-    background-color:  rgb(253, 255, 121);
-    transition: 0.3s;
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
-    margin-top: 0px !important;
-    margin-bottom: 0px !important;
-    font-weight: bold;
-}
-
-/*Propiedades comunes a todas las plantas*/
-#planta-baja, #planta-primera, #planta-segunda{
-    background-size: contain;
-    background-repeat: no-repeat;
-    position: relative;
-}
-
-#planta-baja {
-    background-image: url(/Planta-baja.png);
-}
-
-#planta-primera {
-    background-image: url(/Planta-primera.png);
-     
-}
-
-#planta-segunda {
-    background-image: url(/Planta-segunda.png);
-    
-}
-
-/*Selecciona todos los divs de AULA dentro de cada planta.*/
-#planta-baja>* , #planta-primera>* , #planta-segunda>* {
-    position: absolute;
-    background-color: rgba(255, 255, 0, 0.26);
-    border: 1px solid rgb(0, 0, 0);
- }
-
-/*Atiende al HOVER de todos los divs AULA dentro de cada planta.*/
- #planta-baja>*:hover, #planta-primera>*:hover, #planta-segunda:hover>*:hover {
-    background-color: rgba(28, 46, 146, 0.5);
-    border: 1px solid gray;
-}
-
-*{
-    padding: 0;
-    margin: 0;
-    text-decoration: none;
-    list-style: none;
-    font-family: 'Open Sans';
-}
-
-header{
-    background-color: rgb(31, 155, 203);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0.5rem 2rem; 
-}
-
-a, li{
-    font-family: Arial, Helvetica, sans-serif;
-}
-
-.logo-header img{
-    width: 75px;
-}
-
-.nav-menu ul{
-    display: flex;
-    align-items: center;
-}
-
-.nav-menu li{
-    margin-right: 1.5rem;
-    background-color: skyblue;
-    border: 2px solid;
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.2rem;        
-}
-
-.nav-menu a{
-    color: black;
-}
-
-.menu-icon img{
-    width: 30px;
-    height: 30px;
-    border-radius: 2px;
-}
-
-.menu-icon, #check{
-    display: none;
-}
-
-@media (max-width:768px){   /*Si fuera para dispositivos móviles principalmente usaríamos min-width*/
-    .checkbtn{
-        display: block;
-    }
-    .menu-icon{
-        display: block;
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        cursor: pointer;    /*Sale la manita para saber que es clickable*/
-    }
-    .nav-menu ul{
-        display: block;
-        position: fixed;
-        top:70px;
-        left:-100%;
-        background: #222;
-        width: 100%;
-        height: 100vh;
-        right: 0;
-    }
-    .nav-menu ul li{
-        padding: 2rem;
-        display: flex;
-        justify-content: center;
-        margin: 0;
-    }
-    
-    #check:checked ~ ul{    /*Aquí accedemos al id check que está en label e input y que afecta a toda la ul*/
-        left: 0;    /**/
-        transition: all 0.25s;  /*Activamos una transición para que el menú aparezca*/
-    }
-}
-
-.botonMenu{
-    cursor: pointer;
-}
-
-.botonMenu{
-    cursor: pointer;
-}
-
-#errorStudent
-{
-    width: 40%;
-    margin-top: 8%;
-    margin-left: 30%;
-    text-align: center;
-}
-
-#errorHeader{
-    width: 80%;
-    font-size: 160%;
-    margin-bottom: 10%;
-    margin-left: 10%;
-    background-color: rgb(241, 241, 224);
-}
-
-.errorContent{
-    color: black;
-    font-size: 160%;  
-}
 
 </style>

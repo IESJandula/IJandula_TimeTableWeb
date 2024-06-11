@@ -128,11 +128,22 @@ const getCourse = async () =>{
 const getLocTeacher = async (nombre,apellidos)=>{
     //Llamada a la peticion
     const data = await getTeacherClassroom(nombre,apellidos);
+    //Se controla la fecha en caso de que sea sabado o domingo
+    let date = new Date();
+    console.log(date.getDay());
     //Se evalua que la peticion haya devuelto el aula para mostralo en un PopUp
     if(typeof data == "undefined")
     {
         infoProfe.value = "El profesor/a "+nombre+" "+apellidos;
         noAula.value = "  No se encuentra ningun aula  ";
+    }
+    else if(date.getDay()==0)
+    {
+        noAula.value = "No se puede buscar un profesor en domingo";
+    }
+    else if(date.getDay()==6)
+    {
+        noAula.value = "No se puede buscar un profesor en sabado";
     }
     else if(typeof data.classroom.floor == "undefined" || typeof data.classroom.number == "undefined" || data.classroom.name == "Sin asignar o sin aula")
     {
@@ -464,199 +475,6 @@ watch(recarga,(nuevo,viejo)=>{
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
-
-
-.nav-menu li:nth-child(2){
-    background-color: rgb(222, 252, 253) !important;
-    border-color: rgb(0, 0, 0);
-}
-
-.nav-menu li:nth-child(2) a{
-    color: rgb(34, 46, 83) !important;
-    font-weight: bold !important;
-}
-
-
-*{
-    padding: 0;
-    margin: 0;
-    text-decoration: none;
-    list-style: none;
-    font-family: 'Open Sans';
-}
-
-body {
-    background-color: rgb(241, 241, 224);
-}
-
-#docente {
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-
-#docente-curso {
-    text-align: center;
-    background-color: white;
-    border: 2px solid black;
-    border-radius: 5px;
-    padding: 12px;
-}
-
-#docente-profesor {
-    text-align: center;
-    background-color: white;
-    border: 2px solid black;
-    border-radius: 5px;
-    padding: 12px;
-}
-
-#docente-profesor:hover, #docente-curso:hover {
-    box-shadow: 0 0 5px rgb(97, 172, 173);
-}
-
-#hoja-calculo {
-    width: 100%;
-    height: 600px;
-    border: 2px solid black;
-}
-
-.button-docente {
-    background-color: rgb(31, 155, 203);
-    border-radius: 5px;
-    padding: 3px;
-}
-
-.button-docente:hover {
-    background-color: hsl(197, 74%, 43%);
-}
-
-.button-docente:active {
-    background-color: hsl(197, 74%, 43%);
-}
-
-
-*{
-    padding: 0;
-    margin: 0;
-    text-decoration: none;
-    list-style: none;
-    font-family: 'Open Sans';
-}
-
-header{
-    background-color: rgb(31, 155, 203);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0.5rem 2rem; 
-}
-
-a, li{
-    font-family: Arial, Helvetica, sans-serif;
-}
-
-.logo-header img{
-    width: 75px;
-}
-
-.nav-menu ul{
-    display: flex;
-    align-items: center;
-}
-
-.nav-menu li{
-    margin-right: 1.5rem;
-    background-color: skyblue;
-    border: 2px solid;
-    padding: 0.25rem 0.75rem;
-    border-radius: 0.2rem;        
-}
-
-.nav-menu a{
-    color: black;
-}
-
-.menu-icon img{
-    width: 30px;
-    height: 30px;
-    border-radius: 2px;
-}
-
-.menu-icon, #check{
-    display: none;
-}
-
-#titulo{
-    background-color: red;
-}
-
-#info-aula{
-    background-color:  rgb(123, 202, 233);
-    border: 2px solid black;
-    border-radius: 5px; 
-}
-
-@media (max-width:768px){   /*Si fuera para dispositivos móviles principalmente usaríamos min-width*/
-    .checkbtn{
-        display: block;
-    }
-    .menu-icon{
-        display: block;
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        cursor: pointer;    /*Sale la manita para saber que es clickable*/
-    }
-    .nav-menu ul{
-        display: block;
-        position: fixed;
-        top:70px;
-        left:-100%;
-        background: #222;
-        width: 100%;
-        height: 100vh;
-        right: 0;
-    }
-    .nav-menu ul li{
-        padding: 2rem;
-        display: flex;
-        justify-content: center;
-        margin: 0;
-    }
-    
-    #check:checked ~ ul{    /*Aquí accedemos al id check que está en label e input y que afecta a toda la ul*/
-        left: 0;    /**/
-        transition: all 0.25s;  /*Activamos una transición para que el menú aparezca*/
-    }
-}
-
-.botonMenu{
-    cursor: pointer;
-}
-
-#errorHeader{
-    width: 80%;
-    font-size: 160%;
-    margin-bottom: 10%;
-    margin-left: 10%;
-    background-color: rgb(241, 241, 224);
-}
-
-.errorContent{
-    color: black;
-    font-size: 160%;  
-}
-
-
-#errorStudent
-{
-    width: 40%;
-    margin-top: 8%;
-    margin-left: 30%;
-    text-align: center;
-}
-
+@import url("../assets/common.css");
+@import url("../assets/teachers.css");
 </style>

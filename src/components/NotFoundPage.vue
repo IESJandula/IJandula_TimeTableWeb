@@ -73,7 +73,7 @@ watch(waitServer,(nuevo,viejo)=>{
     if(nuevo)
     {
         waitServer.value = false;
-        router.push("/horarios/mapa");
+        router.push("/horarios/profesores");
     }
 });
 </script>
