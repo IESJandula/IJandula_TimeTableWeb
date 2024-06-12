@@ -9,9 +9,10 @@
     display: inline-block;
 }
 .firma div:first-child{
-    margin-top: 1.2%;
+    margin-bottom: 1%;
     margin-left: 3%;
     float: left;
+    width: 22%;
 }
 
 .firma div:nth-child(2){
@@ -19,6 +20,12 @@
     margin-left: 30%;
     margin-right: 2%;
     clear: left;
+}
+
+
+.firma div:nth-child(1) img{
+    width: 30px;
+    float: right;
 }
 
 .firma div:nth-child(2) img{
