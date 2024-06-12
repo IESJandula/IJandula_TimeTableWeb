@@ -22,6 +22,7 @@
 }
 
 .firma div:nth-child(2) img{
-    width: 50px;
+    margin-top: 3.3%;
+    width: 30px;
     float: right;
 }
