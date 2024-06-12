@@ -282,6 +282,7 @@ watch(recarga,(nuevo,viejo)=>{
             </div>
             <footer class="firma" style="margin-top: 10%;">
                 <div>
+                    <a href="https://www.linkedin.com/company/ies-jándula/" target="_blank"><img src="../assets/linkedin.png"></a>
                     <p>Web propietaria del centro IES Jandula 2024 ©</p>
                 </div>
                 <div>
