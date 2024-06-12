@@ -1,0 +1,27 @@
+.firma{
+    width: 100%;
+    background-color: rgb(31, 155, 203);
+    padding-top:0.8%;
+    padding-bottom: 0.8%;
+    font-weight: bold;
+}
+.firma div{
+    display: inline-block;
+}
+.firma div:first-child{
+    margin-top: 1.2%;
+    margin-left: 3%;
+    float: left;
+}
+
+.firma div:nth-child(2){
+    width: 26%;
+    margin-left: 30%;
+    margin-right: 2%;
+    clear: left;
+}
+
+.firma div:nth-child(2) img{
+    width: 50px;
+    float: right;
+}

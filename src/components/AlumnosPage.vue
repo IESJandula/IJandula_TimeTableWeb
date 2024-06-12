@@ -1033,6 +1033,15 @@ watch(alumnos,(nuevo,viejo) => {
             </div>
 
         </div>
+        <footer class="firma" style="margin-top: 9.4%;">
+            <div>
+                <p>Web propietaria del centro IES Jandula 2024 ©</p>
+            </div>
+            <div>
+                <a href="https://www.linkedin.com/in/pablo-el%C3%ADas-ruiz-c%C3%A1novas-315a66267/" target="_blank"><img src="../assets/linkedin.png"></a>
+                <p>Web desarrollada por los alumnos de 1 DAM curso 2023/2024 y el alumno de 2DAM Pablo Elías Ruiz Cánovas</p>
+            </div>        
+        </footer>
         
 
 </template>
@@ -1041,5 +1050,6 @@ watch(alumnos,(nuevo,viejo) => {
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 @import url("../assets/common.css");
 @import url("../assets/alumnos.css");
+@import url("../assets/firma.css");
 
 </style>
