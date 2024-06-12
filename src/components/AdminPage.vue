@@ -280,7 +280,7 @@ watch(recarga,(nuevo,viejo)=>{
                     <button id="alinear" v-on:click="cargarPlanos()">Cargar</button>
                 </section>
             </div>
-            <footer class="firma" style="margin-top: 9.4%;">
+            <footer class="firma" style="margin-top: 10%;">
                 <div>
                     <p>Web propietaria del centro IES Jandula 2024 ©</p>
                 </div>
