@@ -206,14 +206,36 @@ const getLocTeacherCourse = async(curso) =>{
     }
     else
     {
-        let arrayApellidos = data.teacher.lastName.split(" ");
-        arrayApellidos[0] = arrayApellidos[0].trim();
-        arrayApellidos[1] = arrayApellidos[1].trim();
-        infoProfe.value = "El profesor "+data.teacher.name+" "+arrayApellidos[0]+" "+arrayApellidos[1];
-        infoNumAula.value = "imparte "+data.subject+" en el aula "+data.classroom.floor+" - "+data.classroom.name;
-        infoNombreAula.value = "para el curso "+curso;
-        noAula.value = "";
-        info.value = true;
+        // Verifica primero si 'data' es efectivamente un array y tiene elementos
+        if (Array.isArray(data) && data.length > 0) 
+        {
+            data.forEach((item) => 
+            {
+                // item sería un objeto del tipo TeacherMoment
+                const { teacher, subject, classroom } = item;
+
+                // Manejo básico de 'lastName' para evitar fallos si no existe o no tiene dos palabras
+                let arrayApellidos = teacher.lastName ? teacher.lastName.split(" ") : [];
+                let primerApellido  = arrayApellidos[0] ? arrayApellidos[0].trim() : "";
+                let segundoApellido = arrayApellidos[1] ? arrayApellidos[1].trim() : "";
+
+                infoProfe.value      = "El profesor " + teacher.name + " " + primerApellido + " " + segundoApellido;
+                infoNumAula.value    = "imparte " + subject + " en el aula " + classroom.name + " - " + classroom.floor;
+                infoNombreAula.value = "para el curso " + curso;
+                noAula.value         = "";
+                info.value           = true;
+
+
+            });
+        }
+        else 
+        {
+            // Manejo del caso en que sea vacío o no sea array
+            console.warn("No se recibió un array válido de datos");
+            noAula.value = "No se encontraron resultados";
+            info.value   = false;
+        }
+
     }
     console.log(data);
 }
@@ -332,7 +354,7 @@ const onchangeHour = ()=>{
 }
 
 const checkStatus = async() =>{
-    let error = await checkData();
+    let error = "hola";//await checkData();
     if((typeof error != "undefined" && typeof error != "string" && error.headerInfo=="Datos no cargados") && error.headerInfo!="Servidor no lanzado")
     {
         sendErrorInfo(error);
@@ -350,10 +372,10 @@ const checkStatus = async() =>{
         header.value = "";
         content.value = "";
         errorData.value = false;
-        getTeacher();
+        /*getTeacher();
         getCourse();
         getHour();
-        getTramo();
+        getTramo();*/
         recarga.value = false;
     }
 }
