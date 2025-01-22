@@ -291,7 +291,9 @@ const onChangeCourse = async () =>{
     const cursoSelection = document.getElementById("selector-curso");
     let curso = cursoSelection.options[cursoSelection.selectedIndex].text;
     const data = await getClassroomCourse(curso);
-    let planta = await findAulaById(data.classroom.number); 
+
+    // OJO QUE EL 0 se ha puesto de forma temporal ya que el endpoint devuelve varios objetos, luego cojo el primero
+    let planta = await findAulaById(data[0].classroom.number); 
 
     let idAula = planta + "-" + data.classroom.number;
     if(planta=="planta-baja")

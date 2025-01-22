@@ -350,7 +350,8 @@ export const showStudentsInfo = (data) =>{
  */
 export const findAulaById = async (numIntAu) =>{
     let planta = "";
-    let aulas = await obtenerAulasPorPlanta("");
+    // OJO TODO MODOIFICAR
+    let aulas = await obtenerAulasPorPlanta(numIntAu);
     for(let i = 0;i<aulas.length;i++)
     {
         if(numIntAu==aulas[i].aula.numIntAu)

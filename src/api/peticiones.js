@@ -236,7 +236,7 @@ export const getPoints = async ()=>{
 export const getSortStudents = async () =>{
     try
     {
-        let url = path+"/horarios/get/sortstudents"
+        let url = path+"/horarios/students/get/sortstudents"
 
         const response = await fetch(url);
 
